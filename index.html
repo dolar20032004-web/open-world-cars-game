@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Open World Cars Telegram v8.0</title>
+    <title>Open World Cars Telegram v9.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -28,7 +28,6 @@
             left: 0;
         }
         
-        /* شاشات القوائم */
         .overlay-screen {
             position: absolute;
             top: 0;
@@ -95,7 +94,6 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        /* متجر السيارات */
         .shop-items {
             display: flex;
             flex-direction: column;
@@ -125,7 +123,6 @@
             color: #facc15;
         }
 
-        /* واجهة اللعب HUD */
         #ui {
             position: absolute;
             top: 12px;
@@ -142,20 +139,19 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 8px 16px;
+            padding: 8px 14px;
             border-radius: 18px;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
             pointer-events: auto;
         }
         #speedometer {
             color: #38bdf8;
             font-family: monospace;
-            font-size: 15px;
+            font-size: 14px;
         }
 
-        /* أزرار التحكم للشاشة العريضة */
         .controls {
             position: absolute;
             bottom: 25px;
@@ -168,11 +164,12 @@
         }
         .btn-group {
             display: flex;
-            gap: 20px;
+            gap: 15px;
+            align-items: center;
         }
         .btn {
-            width: 70px;
-            height: 70px;
+            width: 65px;
+            height: 65px;
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(8px);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -181,7 +178,7 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 26px;
+            font-size: 24px;
             font-weight: bold;
             touch-action: manipulation;
             box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
@@ -191,22 +188,28 @@
             border-color: #38bdf8;
             transform: scale(0.92);
         }
+        .nitro-btn {
+            background: rgba(220, 38, 38, 0.8);
+            border-color: #f87171;
+            font-size: 14px;
+        }
+        .nitro-btn:active {
+            background: rgba(239, 68, 68, 0.9);
+        }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 <body>
 
-    <!-- الشاشة الرئيسية -->
     <div class="overlay-screen" id="main-menu">
         <div class="menu-card">
-            <div class="menu-title">سيارات العراق 3D</div>
-            <div class="menu-subtitle">الوضع العريض - تجربة قيادة واقعية</div>
+            <div class="menu-title">سيارات العراق 3D v9</div>
+            <div class="menu-subtitle">عالم مفتوح مع نيترو وشرطة ومسافات</div>
             <button class="main-btn" id="btn-start-game">▶ ابدأ اللعب</button>
             <button class="main-btn secondary" id="btn-open-shop">🏎️ متجر السيارات</button>
         </div>
     </div>
 
-    <!-- متجر السيارات -->
     <div class="overlay-screen" id="shop-menu" style="display: none;">
         <div class="menu-card">
             <div class="menu-title">متجر السيارات</div>
@@ -242,21 +245,21 @@
 
     <div id="game-container"></div>
 
-    <!-- واجهة القيادة -->
     <div id="ui">
         <div class="hud-card">💰 <span id="coins-display">0</span></div>
+        <div class="hud-card" id="odometer">🛣️ 0.00 كم</div>
         <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️ نهار</button>
         <button class="hud-card" id="btn-pause-menu" style="cursor: pointer;">⚙️</button>
         <div class="hud-card" id="speedometer">0 KM/H</div>
     </div>
 
-    <!-- التحكم -->
     <div class="controls">
         <div class="btn-group">
             <div class="btn" id="btn-left">◀</div>
             <div class="btn" id="btn-right">▶</div>
         </div>
         <div class="btn-group">
+            <div class="btn nitro-btn" id="btn-nitro">🚀</div>
             <div class="btn" id="btn-brake">⬇</div>
             <div class="btn" id="btn-gas">⬆</div>
         </div>
@@ -267,19 +270,15 @@
         if (tg) {
             tg.expand();
             tg.ready();
-            if (tg.requestFullscreen) {
-                tg.requestFullscreen();
-            }
-            if (typeof tg.setOrientation === 'function') {
-                tg.setOrientation('landscape');
-            } else if (typeof tg.lockOrientation === 'function') {
-                tg.lockOrientation('landscape');
-            }
         }
 
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(() => {});
-        }
+        // تحميل البيانات المحفوظة مسبقاً
+        let totalCoins = parseInt(localStorage.getItem('carGame_coins')) || 0;
+        let unlockedCars = JSON.parse(localStorage.getItem('carGame_unlocked')) || [true, false, false];
+        let totalDistance = parseFloat(localStorage.getItem('carGame_distance')) || 0;
+
+        document.getElementById('coins-display').innerText = totalCoins;
+        document.getElementById('odometer').innerText = `🛣️ ${totalDistance.toFixed(2)} كم`;
 
         // --- محاكي الصوت (Audio Synthesizer) ---
         let audioCtx = null;
@@ -301,7 +300,6 @@
 
             engineFilter.type = 'lowpass';
             engineFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
-
             engineGain.gain.setValueAtTime(0.07, audioCtx.currentTime);
 
             engineOsc1.connect(engineFilter);
@@ -328,6 +326,21 @@
             osc.stop(audioCtx.currentTime + 0.12);
         }
 
+        function playCrashSound() {
+            if (!audioCtx) return;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.25);
+        }
+
         function updateEngineSound(currentSpeed) {
             if (!engineOsc1 || !audioCtx) return;
             const normSpeed = Math.abs(currentSpeed);
@@ -352,8 +365,6 @@
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-        renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.1;
         container.appendChild(renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
@@ -362,13 +373,9 @@
         const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
         sunLight.position.set(100, 150, 50);
         sunLight.castShadow = true;
-        sunLight.shadow.mapSize.width = 1024;
-        sunLight.shadow.mapSize.height = 1024;
         scene.add(sunLight);
 
         const textureLoader = new THREE.TextureLoader();
-
-        // الأرضية
         const grassTex = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
         grassTex.wrapS = THREE.RepeatWrapping;
         grassTex.wrapT = THREE.RepeatWrapping;
@@ -382,7 +389,6 @@
         grass.receiveShadow = true;
         scene.add(grass);
 
-        // الطرق والأرصفة والمطبات
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
         const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
         const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
@@ -396,7 +402,6 @@
             const roadV = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, worldSize), roadMat);
             roadV.rotation.x = -Math.PI / 2;
             roadV.position.set(pos, 0.02, 0);
-            roadV.receiveShadow = true;
             scene.add(roadV);
 
             const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.5, worldSize), lineMat);
@@ -407,7 +412,6 @@
             const roadH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, roadWidth), roadMat);
             roadH.rotation.x = -Math.PI / 2;
             roadH.position.set(0, 0.02, pos);
-            roadH.receiveShadow = true;
             scene.add(roadH);
 
             const lineH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, 0.5), lineMat);
@@ -421,41 +425,7 @@
             scene.add(bump);
         }
 
-        // إشارات المرور
-        const trafficLights = [];
-        const redMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-        const greenMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-
-        for (let bx = -worldSize / 2 + 60; bx < worldSize / 2 - 60; bx += roadSpacing) {
-            for (let bz = -worldSize / 2 + 60; bz < worldSize / 2 - 60; bz += roadSpacing) {
-                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7), curbMat);
-                pole.position.set(bx + roadWidth / 2 + 2, 3.5, bz + roadWidth / 2 + 2);
-
-                const box = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.2, 0.8), roadMat);
-                box.position.set(bx + roadWidth / 2 + 2, 6, bz + roadWidth / 2 + 2);
-
-                const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), redMat);
-                lightMesh.position.set(bx + roadWidth / 2 + 2, 6.2, bz + roadWidth / 2 + 1.5);
-
-                scene.add(pole);
-                scene.add(box);
-                scene.add(lightMesh);
-
-                trafficLights.push(lightMesh);
-            }
-        }
-
-        setInterval(() => {
-            trafficLights.forEach(tl => {
-                tl.material = Math.random() > 0.5 ? greenMat : redMat;
-            });
-        }, 4000);
-
-        // المباني والأشجار
         const colliders = [];
-        const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
-        const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.6 });
-
         for (let bx = -worldSize / 2 + 60; bx < worldSize / 2 - 60; bx += roadSpacing) {
             for (let bz = -worldSize / 2 + 60; bz < worldSize / 2 - 60; bz += roadSpacing) {
                 const bWidth = 36;
@@ -470,24 +440,11 @@
                 );
                 building.position.set(cx, bHeight / 2, cz);
                 building.castShadow = true;
-                building.receiveShadow = true;
                 scene.add(building);
                 colliders.push({ x: cx, z: cz, radius: 20 });
-
-                const tree = new THREE.Group();
-                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2), trunkMat);
-                trunk.position.y = 1;
-                tree.add(trunk);
-                const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 4.5, 8), leavesMat);
-                leaves.position.y = 3.25;
-                leaves.castShadow = true;
-                tree.add(leaves);
-                tree.position.set(cx + 15, 0, cz + 15);
-                scene.add(tree);
             }
         }
 
-        // العملات
         const coins = [];
         const coinGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 16);
         const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
@@ -498,13 +455,12 @@
             const rx = (Math.floor(Math.random() * 4) - 1.5) * roadSpacing;
             const rz = (Math.random() - 0.5) * (worldSize - 100);
             coin.position.set(rx, 1.2, rz);
-            coin.castShadow = true;
             scene.add(coin);
             coins.push(coin);
         }
 
-        // بناء السيارات
-        function createCarMesh(colorHex, isTaxi = false) {
+        // بناء السيارات مع إضافة سيارات الشرطة
+        function createCarMesh(colorHex, isTaxi = false, isPolice = false) {
             const cGroup = new THREE.Group();
             const paintMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.7, roughness: 0.2 });
             const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
@@ -512,7 +468,6 @@
 
             const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.2), paintMat);
             body.position.y = 0.5;
-            body.castShadow = true;
             cGroup.add(body);
 
             const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2.1), glassMat);
@@ -525,13 +480,21 @@
                 cGroup.add(taxiSign);
             }
 
+            if (isPolice) {
+                const pLightRed = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+                pLightRed.position.set(-0.3, 1.6, -0.3);
+                cGroup.add(pLightRed);
+                const pLightBlue = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.3), new THREE.MeshBasicMaterial({ color: 0x0000ff }));
+                pLightBlue.position.set(0.3, 1.6, -0.3);
+                cGroup.add(pLightBlue);
+            }
+
             const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 24);
             const wPos = [[-1.1, 0.4, 1.2], [1.1, 0.4, 1.2], [-1.1, 0.4, -1.2], [1.1, 0.4, -1.2]];
             wPos.forEach(pos => {
                 const w = new THREE.Mesh(wheelGeo, blackMat);
                 w.rotation.z = Math.PI / 2;
                 w.position.set(...pos);
-                w.castShadow = true;
                 cGroup.add(w);
             });
 
@@ -545,9 +508,6 @@
         ];
 
         let selectedCarIndex = 0;
-        let unlockedCars = [true, false, false];
-        let totalCoins = 0;
-
         let car = createCarMesh(carsData[0].color, false);
         scene.add(car);
 
@@ -569,6 +529,8 @@
             if (totalCoins >= price) {
                 totalCoins -= price;
                 unlockedCars[index] = true;
+                localStorage.setItem('carGame_coins', totalCoins);
+                localStorage.setItem('carGame_unlocked', JSON.stringify(unlockedCars));
                 document.getElementById('coins-display').innerText = totalCoins;
                 document.getElementById('shop-coins-display').innerText = totalCoins;
                 document.getElementById(`buy-btn-${index}`).innerText = "مجهزة";
@@ -579,16 +541,16 @@
             }
         }
 
-        // الذكاء الاصطناعي
+        // سيارات الشرطة والمرور المتجولة
         const trafficCars = [];
-        for (let i = 0; i < 5; i++) {
-            const aiCar = createCarMesh(0x64748b, false);
-            aiCar.position.set((i - 2) * roadSpacing + 4, 0, (Math.random() - 0.5) * 300);
+        for (let i = 0; i < 6; i++) {
+            const isPol = i === 0;
+            const aiCar = createCarMesh(isPol ? 0x1e293b : 0x64748b, false, isPol);
+            aiCar.position.set((i - 3) * roadSpacing + 4, 0, (Math.random() - 0.5) * 300);
             scene.add(aiCar);
-            trafficCars.push({ mesh: aiCar, speed: 0.3 });
+            trafficCars.push({ mesh: aiCar, speed: isPol ? 0.45 : 0.3 });
         }
 
-        // الليل والنهار
         let isNight = false;
         document.getElementById('btn-toggle-night').addEventListener('click', () => {
             isNight = !isNight;
@@ -607,7 +569,6 @@
             }
         });
 
-        // القوائم
         document.getElementById('btn-start-game').addEventListener('click', () => {
             initAudio();
             document.getElementById('main-menu').style.display = 'none';
@@ -626,13 +587,13 @@
             document.getElementById('main-menu').style.display = 'flex';
         });
 
-        // الفيزياء والتحكم
+        // الفيزياء والتحكم مع نظام النيترو
         let speed = 0;
         let accel = 0.018;
         let friction = 0.009;
         let angle = 0;
 
-        const keys = { gas: false, brake: false, left: false, right: false };
+        const keys = { gas: false, brake: false, left: false, right: false, nitro: false };
 
         function bindControl(id, key) {
             const btn = document.getElementById(id);
@@ -648,11 +609,15 @@
         bindControl('btn-brake', 'brake');
         bindControl('btn-left', 'left');
         bindControl('btn-right', 'right');
+        bindControl('btn-nitro', 'nitro');
 
         function animate() {
             requestAnimationFrame(animate);
 
-            const currentMaxSpeed = carsData[selectedCarIndex].maxSpeed;
+            let currentMaxSpeed = carsData[selectedCarIndex].maxSpeed;
+            if (keys.nitro) {
+                currentMaxSpeed *= 1.7; // مضاعفة السرعة بالنيترو
+            }
 
             if (keys.gas) {
                 speed = Math.min(speed + accel, currentMaxSpeed);
@@ -664,6 +629,15 @@
             }
 
             updateEngineSound(speed);
+
+            if (Math.abs(speed) > 0.01) {
+                totalDistance += Math.abs(speed) * 0.0008;
+                document.getElementById('odometer').innerText = `🛣️ ${totalDistance.toFixed(2)} كم`;
+                // حفظ المسافة دورياً
+                if (Math.random() < 0.05) {
+                    localStorage.setItem('carGame_distance', totalDistance);
+                }
+            }
 
             let turnAngle = 0;
             if (keys.left) turnAngle = 0.35;
@@ -689,6 +663,7 @@
                 car.position.x = nextX;
                 car.position.z = nextZ;
             } else {
+                playCrashSound();
                 speed = -speed * 0.3;
             }
 
@@ -705,13 +680,21 @@
                     if (Math.hypot(car.position.x - coin.position.x, car.position.z - coin.position.z) < 2.5) {
                         coin.visible = false;
                         totalCoins += 10;
+                        localStorage.setItem('carGame_coins', totalCoins);
                         document.getElementById('coins-display').innerText = totalCoins;
                         playCoinSound();
                     }
                 }
             });
 
-            const camOffset = new THREE.Vector3(0, 2.8, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            // اهتزاز الكاميرا عند تفعيل النيترو
+            let shakeX = 0, shakeY = 0;
+            if (keys.nitro && Math.abs(speed) > 0.5) {
+                shakeX = (Math.random() - 0.5) * 0.15;
+                shakeY = (Math.random() - 0.5) * 0.15;
+            }
+
+            const camOffset = new THREE.Vector3(shakeX, 2.8 + shakeY, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             camera.position.copy(car.position).add(camOffset);
             camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
 

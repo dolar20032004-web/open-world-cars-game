@@ -38,15 +38,15 @@
             pointer-events: none;
         }
         .hud-card {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
             padding: 8px 16px;
             border-radius: 20px;
             font-weight: 700;
             font-size: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
         }
         #speedometer {
             color: #38bdf8;
@@ -68,9 +68,9 @@
         .btn {
             width: 62px;
             height: 62px;
-            background: rgba(15, 23, 42, 0.65);
+            background: rgba(15, 23, 42, 0.7);
             backdrop-filter: blur(6px);
-            border: 1.5px solid rgba(255, 255, 255, 0.25);
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -79,10 +79,10 @@
             font-size: 20px;
             font-weight: bold;
             touch-action: manipulation;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
         }
         .btn:active {
-            background: rgba(56, 189, 248, 0.8);
+            background: rgba(56, 189, 248, 0.85);
             border-color: #38bdf8;
             transform: scale(0.92);
         }
@@ -124,8 +124,8 @@
     <script>
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0x87ceeb); // سماء زرقاء
-        scene.fog = new THREE.FogExp2(0x87ceeb, 0.008);
+        scene.background = new THREE.Color(0x7dd3fc);
+        scene.fog = new THREE.FogExp2(0x7dd3fc, 0.005);
 
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -134,71 +134,110 @@
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
         scene.add(ambientLight);
 
         const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
-        dirLight.position.set(40, 60, 20);
+        dirLight.position.set(60, 100, 40);
         dirLight.castShadow = true;
         dirLight.shadow.mapSize.width = 1024;
         dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight);
 
-        // الأرضية
-        const groundGeo = new THREE.PlaneGeometry(500, 500);
-        const groundMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.8 });
-        const ground = new THREE.Mesh(groundGeo, groundMat);
-        ground.rotation.x = -Math.PI / 2;
-        ground.receiveShadow = true;
-        scene.add(ground);
+        // العشب / بيئة المدينة
+        const grassGeo = new THREE.PlaneGeometry(600, 600);
+        const grassMat = new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 });
+        const grass = new THREE.Mesh(grassGeo, grassMat);
+        grass.rotation.x = -Math.PI / 2;
+        grass.receiveShadow = true;
+        scene.add(grass);
 
-        // إضافة مبانٍ بالمدينة
-        for(let i = 0; i < 40; i++) {
-            const h = Math.random() * 25 + 10;
-            const bGeo = new THREE.BoxGeometry(12, h, 12);
-            const bMat = new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.5 });
-            const building = new THREE.Mesh(bGeo, bMat);
-            const x = (Math.random() - 0.5) * 300;
-            const z = (Math.random() - 0.5) * 300;
-            if(Math.abs(x) > 20 || Math.abs(z) > 20) {
-                building.position.set(x, h/2, z);
-                building.castShadow = true;
-                building.receiveShadow = true;
-                scene.add(building);
+        // إنشاء شبكة الطرق (Road Grid)
+        const roadGroup = new THREE.Group();
+        const roadMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.7 });
+        const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+
+        // طرق طولية وعرضية
+        for (let i = -200; i <= 200; i += 80) {
+            // طريق طولي
+            const roadV = new THREE.Mesh(new THREE.PlaneGeometry(16, 600), roadMat);
+            roadV.rotation.x = -Math.PI / 2;
+            roadV.position.set(i, 0.02, 0);
+            roadV.receiveShadow = true;
+            roadGroup.add(roadV);
+
+            // خط المُنصّف الأسفر للطريق الطولي
+            const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.4, 600), lineMat);
+            lineV.rotation.x = -Math.PI / 2;
+            lineV.position.set(i, 0.03, 0);
+            roadGroup.add(lineV);
+
+            // طريق عرضي
+            const roadH = new THREE.Mesh(new THREE.PlaneGeometry(600, 16), roadMat);
+            roadH.rotation.x = -Math.PI / 2;
+            roadH.position.set(0, 0.02, i);
+            roadH.receiveShadow = true;
+            roadGroup.add(roadH);
+
+            // خط المُنصّف الأسفر للطريق العرضي
+            const lineH = new THREE.Mesh(new THREE.PlaneGeometry(600, 0.4), lineMat);
+            lineH.rotation.x = -Math.PI / 2;
+            lineH.position.set(0, 0.03, i);
+            roadGroup.add(lineH);
+        }
+        scene.add(roadGroup);
+
+        // إضافة مباني بالتقاطعات والأحياء
+        const buildingColors = [0x334155, 0x475569, 0x64748b, 0x0284c7, 0x0f766e];
+        for (let x = -220; x <= 220; x += 80) {
+            for (let z = -220; z <= 220; z += 80) {
+                // وضع مبانٍ في مربعات الأحياء بين الطرق
+                for (let b = 0; b < 2; b++) {
+                    const bx = x + (Math.random() * 40 - 20) + 40;
+                    const bz = z + (Math.random() * 40 - 20) + 40;
+                    const h = Math.random() * 30 + 15;
+                    const bGeo = new THREE.BoxGeometry(22, h, 22);
+                    const bMat = new THREE.MeshStandardMaterial({ 
+                        color: buildingColors[Math.floor(Math.random() * buildingColors.length)],
+                        roughness: 0.3
+                    });
+                    const building = new THREE.Mesh(bGeo, bMat);
+                    building.position.set(bx, h / 2, bz);
+                    building.castShadow = true;
+                    building.receiveShadow = true;
+                    scene.add(building);
+                }
             }
         }
 
-        // بناء نموذج سيارة مع عجلات
+        // بناء السيارة
         const car = new THREE.Group();
         
-        // الهيكل الرئيسي
         const bodyGeo = new THREE.BoxGeometry(1.8, 0.6, 3.8);
-        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xd97706, metalness: 0.3, roughness: 0.2 });
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xe11d48, metalness: 0.4, roughness: 0.2 });
         const carBody = new THREE.Mesh(bodyGeo, bodyMat);
         carBody.position.y = 0.5;
         carBody.castShadow = true;
         car.add(carBody);
 
-        // السقف والزجاج
         const cabinGeo = new THREE.BoxGeometry(1.4, 0.5, 1.8);
         const cabinMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.1 });
         const cabin = new THREE.Mesh(cabinGeo, cabinMat);
         cabin.position.set(0, 0.95, -0.2);
         car.add(cabin);
 
-        // العجلات
         const wheelGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.25, 16);
         const wheelMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.9 });
         
         const wheels = [];
         const wheelPositions = [
-            [-0.95, 0.35, 1.1],  // أمامي يسار
-            [0.95, 0.35, 1.1],   // أمامي يمين
-            [-0.95, 0.35, -1.1], // خلفي يسار
-            [0.95, 0.35, -1.1]   // خلفي يمين
+            [-0.95, 0.35, 1.1],
+            [0.95, 0.35, 1.1],
+            [-0.95, 0.35, -1.1],
+            [0.95, 0.35, -1.1]
         ];
 
-        wheelPositions.forEach((pos, idx) => {
+        wheelPositions.forEach((pos) => {
             const wheelGroup = new THREE.Group();
             const wheel = new THREE.Mesh(wheelGeo, wheelMat);
             wheel.rotation.z = Math.PI / 2;
@@ -209,12 +248,14 @@
             wheels.push(wheelGroup);
         });
 
+        // البدء على الطريق مباشرة
+        car.position.set(0, 0, 0);
         scene.add(car);
 
-        // الفيزياء والتحكم
+        // الحركة والفيزياء
         let speed = 0;
-        let maxSpeed = 0.9;
-        let accel = 0.015;
+        let maxSpeed = 0.95;
+        let accel = 0.016;
         let friction = 0.008;
         let turnAngle = 0;
         let angle = 0;
@@ -244,28 +285,24 @@
                 if (speed < 0) speed = Math.min(0, speed + friction);
             }
 
-            // توجيه العجلات والأمام
             turnAngle = 0;
             if (keys.left) turnAngle = 0.35;
             if (keys.right) turnAngle = -0.35;
 
-            // تدوير العجلات الأمامية
             wheels[0].rotation.y = turnAngle;
             wheels[1].rotation.y = turnAngle;
 
             if (Math.abs(speed) > 0.01) {
                 const dir = speed > 0 ? 1 : -1;
-                angle += turnAngle * 0.08 * dir;
+                angle += turnAngle * 0.075 * dir;
             }
 
-            // دوران العجلات أثناء الحركة
             wheels.forEach(w => w.children[0].rotation.x += speed * 2);
 
             car.rotation.y = angle;
             car.position.x += Math.sin(angle) * speed;
             car.position.z += Math.cos(angle) * speed;
 
-            // تتبع الكاميرا للسيارة
             const camOffset = new THREE.Vector3(0, 3.2, -7.5).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             camera.position.copy(car.position).add(camOffset);
             camera.lookAt(car.position.x, car.position.y + 1, car.position.z);

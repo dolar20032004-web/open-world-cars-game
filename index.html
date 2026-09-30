@@ -1,741 +1,256 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Open World Cars</title>
-
-<style>
-*{box-sizing:border-box}
-html,body{
-    margin:0;
-    width:100%;
-    height:100%;
-    overflow:hidden;
-    background:#101820;
-    font-family:Arial,sans-serif;
-    touch-action:none;
-}
-#game{width:100%;height:100%}
-
-#hud{
-    position:fixed;
-    top:12px;
-    right:12px;
-    z-index:10;
-    color:white;
-    background:rgba(0,0,0,.58);
-    border:1px solid rgba(255,255,255,.15);
-    border-radius:16px;
-    padding:12px;
-    min-width:180px;
-    backdrop-filter:blur(8px);
-}
-#hud div{margin:4px 0}
-.gold{color:#ffd43b;font-weight:bold}
-
-#controls{
-    position:fixed;
-    inset:0;
-    z-index:20;
-    pointer-events:none;
-}
-.btn{
-    pointer-events:auto;
-    position:absolute;
-    width:72px;
-    height:72px;
-    border-radius:50%;
-    border:2px solid rgba(255,255,255,.3);
-    background:rgba(0,0,0,.48);
-    color:white;
-    font-size:28px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    user-select:none;
-    -webkit-user-select:none;
-}
-#left{bottom:35px;left:25px}
-#right{bottom:35px;left:110px}
-#gas{bottom:115px;right:28px}
-#brake{bottom:35px;right:28px}
-
-#menu{
-    position:fixed;
-    top:12px;
-    left:12px;
-    z-index:30;
-}
-.menuBtn{
-    background:rgba(0,0,0,.65);
-    color:#fff;
-    border:1px solid #555;
-    padding:11px 15px;
-    border-radius:12px;
-    font-size:15px;
-}
-
-#panel{
-    display:none;
-    position:fixed;
-    z-index:40;
-    left:50%;
-    top:50%;
-    transform:translate(-50%,-50%);
-    width:min(92%,430px);
-    max-height:85vh;
-    overflow:auto;
-    background:rgba(12,17,22,.96);
-    color:white;
-    border:1px solid #555;
-    border-radius:20px;
-    padding:18px;
-}
-.card{
-    background:#1b242c;
-    border-radius:14px;
-    padding:12px;
-    margin:9px 0;
-}
-.action{
-    width:100%;
-    border:0;
-    border-radius:10px;
-    padding:11px;
-    margin-top:8px;
-    background:#2878ff;
-    color:#fff;
-    font-weight:bold;
-}
-.close{background:#a52a2a}
-.carPreview{
-    height:80px;
-    border-radius:12px;
-    margin-bottom:8px;
-    background:linear-gradient(135deg,#252525,#555);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    font-size:38px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Open World Cars</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: sans-serif;
+        }
+        #game-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        /* واجهة المستخدم Top UI */
+        #ui {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .hud-card {
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        #speedometer {
+            color: #00ffcc;
+        }
+        /* أزرار التحكم للموبايل Mobile Controls */
+        .controls {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+        .btn-group {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            width: 65px;
+            height: 65px;
+            background: rgba(255, 255, 255, 0.25);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 22px;
+            font-weight: bold;
+            touch-action: manipulation;
+        }
+        .btn:active {
+            background: rgba(0, 255, 204, 0.6);
+            transform: scale(0.95);
+        }
+        #btn-cam {
+            position: absolute;
+            top: 70px;
+            right: 15px;
+            width: 45px;
+            height: 45px;
+            font-size: 14px;
+            border-radius: 10px;
+            pointer-events: auto;
+        }
+    </style>
+    <!-- استدعاء مكتبة Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
-
 <body>
 
-<div id="game"></div>
+    <div id="game-container"></div>
 
-<div id="hud">
-    <div>🚗 السيارة: <b id="carName">Falcon</b></div>
-    <div>⚡ السرعة: <b id="speed">0</b> km/h</div>
-    <div>💰 العملات: <span class="gold" id="coins">0</span></div>
-    <div>🏠 البيت: <b id="house">صغير</b></div>
-    <div>🔧 المحرك: Lv.<b id="engine">1</b></div>
-</div>
-
-<div id="menu">
-    <button class="menuBtn" onclick="openPanel()">☰ القائمة</button>
-</div>
-
-<div id="controls">
-    <div class="btn" id="left">◀</div>
-    <div class="btn" id="right">▶</div>
-    <div class="btn" id="gas">▲</div>
-    <div class="btn" id="brake">▼</div>
-</div>
-
-<div id="panel">
-    <h2>🚗 Open World Cars</h2>
-
-    <div class="card">
-        <div class="carPreview">🏎️</div>
-        <b id="panelCar">Falcon</b>
-        <div>المحرك: Lv.<span id="pEngine">1</span></div>
-        <div>التسارع: <span id="pAccel">1</span></div>
-        <div>السرعة القصوى: <span id="pMax">160</span> km/h</div>
+    <div id="ui">
+        <div class="hud-card">💰 <span id="coins">100</span> Coins</div>
+        <div class="hud-card" id="speedometer">0 KM/H</div>
     </div>
 
-    <div class="card">
-        <h3>🔧 تطوير السيارة</h3>
-        <button class="action" onclick="upgradeEngine()">تطوير المحرك — 500 💰</button>
-        <button class="action" onclick="upgradeGear()">تطوير الجير — 700 💰</button>
-        <button class="action" onclick="upgradeTurbo()">تطوير التيربو — 1000 💰</button>
+    <button class="btn" id="btn-cam">📷</button>
+
+    <div class="controls">
+        <div class="btn-group">
+            <div class="btn" id="btn-left">◀</div>
+            <div class="btn" id="btn-right">▶</div>
+        </div>
+        <div class="btn-group">
+            <div class="btn" id="btn-brake">⬇</div>
+            <div class="btn" id="btn-gas">⬆</div>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>🚘 معرض السيارات</h3>
-        <div id="cars"></div>
-    </div>
-
-    <div class="card">
-        <h3>🏠 العقارات</h3>
-        <div>بيتك الحالي: <b id="panelHouse">صغير</b></div>
-        <button class="action" onclick="buyHouse()">شراء بيت أكبر — 5000 💰</button>
-    </div>
-
-    <div class="card">
-        <h3>🏁 السباقات</h3>
-        <button class="action" onclick="race()">بدء سباق تجريبي</button>
-    </div>
-
-    <button class="action close" onclick="closePanel()">إغلاق</button>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-
-<script>
-/* =========================
-   OPEN WORLD CARS
-========================= */
-
-let scene, camera, renderer;
-let car;
-let velocity = 0;
-let steering = 0;
-
-let coins = Number(localStorage.getItem("coins") || 0);
-let engine = Number(localStorage.getItem("engine") || 1);
-let gear = Number(localStorage.getItem("gear") || 1);
-let turbo = Number(localStorage.getItem("turbo") || 1);
-let houseLevel = Number(localStorage.getItem("house") || 1);
-let selectedCar = Number(localStorage.getItem("car") || 0);
-
-const cars = [
-    {name:"Falcon", price:0, max:160, accel:1},
-    {name:"Raptor", price:3000, max:180, accel:1.15},
-    {name:"Shadow", price:6000, max:200, accel:1.25},
-    {name:"Storm", price:9000, max:220, accel:1.35},
-    {name:"Venom", price:13000, max:240, accel:1.45},
-    {name:"Titan", price:18000, max:250, accel:1.5},
-    {name:"Phantom", price:25000, max:270, accel:1.6},
-    {name:"Inferno", price:33000, max:285, accel:1.7},
-    {name:"GTR-X", price:42000, max:300, accel:1.8},
-    {name:"Apex", price:55000, max:315, accel:1.9},
-    {name:"Blaze", price:70000, max:330, accel:2},
-    {name:"Thunder", price:90000, max:345, accel:2.1},
-    {name:"Vortex", price:115000, max:360, accel:2.2},
-    {name:"Hyper-X", price:150000, max:380, accel:2.35},
-    {name:"Legend", price:200000, max:400, accel:2.5}
-];
-
-const bought = JSON.parse(localStorage.getItem("boughtCars") || "[true]");
-
-function save(){
-    localStorage.setItem("coins",coins);
-    localStorage.setItem("engine",engine);
-    localStorage.setItem("gear",gear);
-    localStorage.setItem("turbo",turbo);
-    localStorage.setItem("house",houseLevel);
-    localStorage.setItem("car",selectedCar);
-    localStorage.setItem("boughtCars",JSON.stringify(bought));
-}
-
-function init(){
-
-    scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x86c8ff);
-
-    scene.fog = new THREE.Fog(0x86c8ff,120,650);
-
-    camera = new THREE.PerspectiveCamera(
-        65,
-        innerWidth/innerHeight,
-        .1,
-        1000
-    );
-
-    renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(innerWidth,innerHeight);
-    renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-    document.getElementById("game").appendChild(renderer.domElement);
-
-    const ambient = new THREE.HemisphereLight(0xffffff,0x446644,2);
-    scene.add(ambient);
-
-    const sun = new THREE.DirectionalLight(0xffffff,2);
-    sun.position.set(100,150,100);
-    scene.add(sun);
-
-    createWorld();
-    createCar();
-
-    window.addEventListener("resize",resize);
-
-    setupControls();
-
-    updateCars();
-    updateHUD();
-
-    animate();
-}
-
-function createWorld(){
-
-    // الأرض
-    const groundGeo = new THREE.PlaneGeometry(1200,1200);
-    const groundMat = new THREE.MeshStandardMaterial({
-        color:0x3c873d,
-        roughness:1
-    });
-
-    const ground = new THREE.Mesh(groundGeo,groundMat);
-    ground.rotation.x=-Math.PI/2;
-    scene.add(ground);
-
-    // الطرق
-    createRoad(0,0,18,1000);
-    createRoad(0,0,1000,18);
-    createRoad(180,0,18,500);
-    createRoad(-180,0,18,500);
-
-    // مباني/بيوت
-    createHouse(35,35,0xdddddd);
-    createHouse(-40,30,0xd5b08c);
-    createHouse(50,-45,0xb8c5d6);
-
-    // أشجار
-    for(let i=0;i<180;i++){
-
-        let x=(Math.random()-0.5)*1000;
-        let z=(Math.random()-0.5)*1000;
-
-        if(Math.abs(x)<35 || Math.abs(z)<35) continue;
-
-        createTree(x,z);
-    }
-
-    // نقاط عملات
-    for(let i=0;i<30;i++){
-        const x=(Math.random()-0.5)*700;
-        const z=(Math.random()-0.5)*700;
-
-        const geo=new THREE.CylinderGeometry(1.5,1.5,.4,24);
-        const mat=new THREE.MeshStandardMaterial({
-            color:0xffd700,
-            emissive:0x553300
-        });
-
-        const coin=new THREE.Mesh(geo,mat);
-        coin.position.set(x,1,z);
-        coin.rotation.x=Math.PI/2;
-        scene.add(coin);
-    }
-}
-
-function createRoad(x,z,w,l){
-
-    const geo=new THREE.PlaneGeometry(w,l);
-    const mat=new THREE.MeshStandardMaterial({
-        color:0x303030,
-        roughness:.95
-    });
-
-    const road=new THREE.Mesh(geo,mat);
-    road.rotation.x=-Math.PI/2;
-    road.position.set(x,.02,z);
-
-    if(w>l) road.rotation.z=Math.PI/2;
-
-    scene.add(road);
-}
-
-function createTree(x,z){
-
-    const trunk=new THREE.Mesh(
-        new THREE.CylinderGeometry(.7,1,5,8),
-        new THREE.MeshStandardMaterial({color:0x654321})
-    );
-
-    trunk.position.set(x,2.5,z);
-    scene.add(trunk);
-
-    const leaves=new THREE.Mesh(
-        new THREE.SphereGeometry(4.5,10,8),
-        new THREE.MeshStandardMaterial({color:0x18752d})
-    );
-
-    leaves.position.set(x,7,z);
-    scene.add(leaves);
-}
-
-function createHouse(x,z,color){
-
-    const body=new THREE.Mesh(
-        new THREE.BoxGeometry(14,8,12),
-        new THREE.MeshStandardMaterial({color})
-    );
-
-    body.position.set(x,4,z);
-    scene.add(body);
-
-    const roof=new THREE.Mesh(
-        new THREE.ConeGeometry(10,5,4),
-        new THREE.MeshStandardMaterial({color:0x7b3328})
-    );
-
-    roof.position.set(x,10,z);
-    roof.rotation.y=Math.PI/4;
-    scene.add(roof);
-}
-
-function createCar(){
-
-    car=new THREE.Group();
-
-    const body=new THREE.Mesh(
-        new THREE.BoxGeometry(3.8,1.1,7),
-        new THREE.MeshStandardMaterial({
-            color:0x1565ff,
-            metalness:.5,
-            roughness:.25
-        })
-    );
-
-    body.position.y=1.25;
-    car.add(body);
-
-    const cabin=new THREE.Mesh(
-        new THREE.BoxGeometry(3,1.25,3),
-        new THREE.MeshStandardMaterial({
-            color:0x111820,
-            metalness:.2,
-            roughness:.15
-        })
-    );
-
-    cabin.position.set(0,2.15,-.2);
-    car.add(cabin);
-
-    const wheelGeo=new THREE.CylinderGeometry(.65,.65,.45,20);
-    const wheelMat=new THREE.MeshStandardMaterial({color:0x111111});
-
-    const wheels=[];
-
-    for(const x of [-2,2]){
-        for(const z of [-2.2,2.2]){
-
-            const wheel=new THREE.Mesh(wheelGeo,wheelMat);
-            wheel.rotation.z=Math.PI/2;
-            wheel.position.set(x*.95,.7,z);
-            car.add(wheel);
-            wheels.push(wheel);
-        }
-    }
-
-    car.position.set(0,0,60);
-
-    scene.add(car);
-}
-
-function setupControls(){
-
-    const buttons={
-        left:()=>steering=-1,
-        right:()=>steering=1,
-        gas:()=>velocity+=1.4,
-        brake:()=>velocity-=2.5
-    };
-
-    for(const id in buttons){
-
-        const el=document.getElementById(id);
-
-        el.addEventListener("touchstart",e=>{
-            e.preventDefault();
-            buttons[id]();
-        });
-
-        el.addEventListener("touchend",e=>{
-            e.preventDefault();
-
-            if(id==="left"||id==="right")
-                steering=0;
-        });
-    }
-
-    // لوحة المفاتيح عند تجربة اللعبة على كمبيوتر
-    window.addEventListener("keydown",e=>{
-
-        if(e.key==="ArrowUp"||e.key==="w")
-            velocity+=1.5;
-
-        if(e.key==="ArrowDown"||e.key==="s")
-            velocity-=2;
-
-        if(e.key==="ArrowLeft"||e.key==="a")
-            steering=-1;
-
-        if(e.key==="ArrowRight"||e.key==="d")
-            steering=1;
-    });
-
-    window.addEventListener("keyup",e=>{
-
-        if(
-            e.key==="ArrowLeft"||
-            e.key==="ArrowRight"||
-            e.key==="a"||
-            e.key==="d"
-        )
-            steering=0;
-    });
-}
-
-let lastRewardSpeed=0;
-
-function update(){
-
-    const data=cars[selectedCar];
-
-    const maxSpeed=
-        data.max+
-        engine*12+
-        gear*7+
-        turbo*18;
-
-    velocity*=.985;
-
-    velocity=Math.max(
-        -30,
-        Math.min(maxSpeed/8,velocity)
-    );
-
-    car.rotation.y-=steering*velocity*.0035;
-
-    const direction=new THREE.Vector3(
-        Math.sin(car.rotation.y),
-        0,
-        Math.cos(car.rotation.y)
-    );
-
-    car.position.addScaledVector(direction,velocity*.18);
-
-    // مكافأة السرعة
-    const kmh=Math.abs(velocity*8);
-
-    if(kmh>=100 && lastRewardSpeed<100){
-        coins+=50;
-        save();
-    }
-
-    lastRewardSpeed=kmh;
-
-    // جمع العملات القريبة
-    scene.children.forEach(obj=>{
-
-        if(
-            obj.geometry &&
-            obj.geometry.type==="CylinderGeometry" &&
-            obj.position.distanceTo(car.position)<4
-        ){
-            obj.position.y=-100;
-            coins+=25;
-            save();
-        }
-    });
-
-    // كاميرا تتبع
-    const camTarget=new THREE.Vector3(
-        car.position.x-
-        Math.sin(car.rotation.y)*12,
-        7,
-        car.position.z-
-        Math.cos(car.rotation.y)*12
-    );
-
-    camera.position.lerp(camTarget,.09);
-
-    camera.lookAt(
-        car.position.x,
-        1.5,
-        car.position.z
-    );
-
-    updateHUD();
-}
-
-function updateHUD(){
-
-    const kmh=Math.round(Math.abs(velocity*8));
-
-    document.getElementById("speed").textContent=kmh;
-    document.getElementById("coins").textContent=coins;
-    document.getElementById("engine").textContent=engine;
-
-    document.getElementById("carName").textContent=
-        cars[selectedCar].name;
-
-    document.getElementById("house").textContent=
-        ["صغير","متوسط","كبير","فيلا"][Math.min(houseLevel-1,3)];
-}
-
-function openPanel(){
-
-    document.getElementById("panel").style.display="block";
-
-    updatePanel();
-}
-
-function closePanel(){
-    document.getElementById("panel").style.display="none";
-}
-
-function updatePanel(){
-
-    const data=cars[selectedCar];
-
-    document.getElementById("panelCar").textContent=data.name;
-    document.getElementById("pEngine").textContent=engine;
-    document.getElementById("pAccel").textContent=data.accel;
-    document.getElementById("pMax").textContent=
-        data.max+engine*12+gear*7+turbo*18;
-
-    document.getElementById("panelHouse").textContent=
-        ["صغير","متوسط","كبير","فيلا"][Math.min(houseLevel-1,3)];
-
-    const box=document.getElementById("cars");
-    box.innerHTML="";
-
-    cars.forEach((c,i)=>{
-
-        const div=document.createElement("div");
-        div.className="card";
-
-        let text="";
-
-        if(bought[i]){
-            text="مملوكة";
-        }else{
-            text=c.price+" 💰";
+    <script>
+        // إعداد المشهد والكاميرا
+        const container = document.getElementById('game-container');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xa0a0a0);
+        scene.fog = new THREE.Fog(0xa0a0a0, 20, 150);
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        container.appendChild(renderer.domElement);
+
+        // الإضاءة
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        scene.add(ambientLight);
+
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(50, 100, 50);
+        dirLight.castShadow = true;
+        scene.add(dirLight);
+
+        // الأرضية / الشارع
+        const groundGeo = new THREE.PlaneGeometry(300, 300);
+        const groundMat = new THREE.MeshStandardMaterial({ color: 0x333333 });
+        const ground = new THREE.Mesh(groundGeo, groundMat);
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        scene.add(ground);
+
+        // إنشاء بعض المباني للبيئة
+        for(let i = 0; i < 30; i++) {
+            const h = Math.random() * 20 + 10;
+            const bGeo = new THREE.BoxGeometry(10, h, 10);
+            const bMat = new THREE.MeshStandardMaterial({ color: 0x667788 });
+            const building = new THREE.Mesh(bGeo, bMat);
+            const x = (Math.random() - 0.5) * 200;
+            const z = (Math.random() - 0.5) * 200;
+            if(Math.abs(x) > 15 || Math.abs(z) > 15) {
+                building.position.set(x, h/2, z);
+                building.castShadow = true;
+                scene.add(building);
+            }
         }
 
-        div.innerHTML=`
-            <b>${i+1}. ${c.name}</b>
-            <br>
-            السرعة القصوى: ${c.max} km/h
-            <br>
-            السعر: ${text}
-            <button class="action">
-                ${bought[i]?"اختيار":"شراء"}
-            </button>
-        `;
+        // إنشاء سيارة مبسطة
+        const car = new THREE.Group();
+        
+        // جسم السيارة
+        const bodyGeo = new THREE.BoxGeometry(2, 0.8, 4);
+        const bodyMat = new THREE.MeshStandardMaterial({ color: 0xff0000 });
+        const carBody = new THREE.Mesh(bodyGeo, bodyMat);
+        carBody.position.y = 0.6;
+        carBody.castShadow = true;
+        car.add(carBody);
 
-        div.querySelector("button").onclick=()=>{
+        // سقف السيارة
+        const roofGeo = new THREE.BoxGeometry(1.6, 0.6, 2);
+        const roofMat = new THREE.MeshStandardMaterial({ color: 0x111111 });
+        const carRoof = new THREE.Mesh(roofGeo, roofMat);
+        carRoof.position.set(0, 1.2, -0.2);
+        car.add(carRoof);
 
-            if(bought[i]){
-                selectedCar=i;
-                save();
-                updatePanel();
-                updateHUD();
-                return;
+        scene.add(car);
+
+        // متغيرات الحركة والفيزياء
+        let speed = 0;
+        let maxSpeed = 0.8;
+        let accel = 0.015;
+        let friction = 0.008;
+        let turnSpeed = 0.03;
+        let angle = 0;
+
+        // حالة الأزرار
+        const keys = { gas: false, brake: false, left: false, right: false };
+
+        function bindTouch(id, key) {
+            const btn = document.getElementById(id);
+            btn.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
+            btn.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+            btn.addEventListener('mousedown', () => { keys[key] = true; });
+            btn.addEventListener('mouseup', () => { keys[key] = false; });
+        }
+
+        bindTouch('btn-gas', 'gas');
+        bindTouch('btn-brake', 'brake');
+        bindTouch('btn-left', 'left');
+        bindTouch('btn-right', 'right');
+
+        // تحديث الحركة والكاميرا
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // التسارع والفرامل
+            if (keys.gas) speed = Math.min(speed + accel, maxSpeed);
+            else if (keys.brake) speed = Math.max(speed - accel, -maxSpeed / 2);
+            else {
+                if (speed > 0) speed = Math.max(0, speed - friction);
+                if (speed < 0) speed = Math.min(0, speed + friction);
             }
 
-            if(coins>=c.price){
-
-                coins-=c.price;
-                bought[i]=true;
-                selectedCar=i;
-
-                save();
-                updatePanel();
-                updateHUD();
-            }else{
-                alert("ما عندك عملات كافية 💰");
+            // التوجيه
+            if (Math.abs(speed) > 0.01) {
+                const dir = speed > 0 ? 1 : -1;
+                if (keys.left) angle += turnSpeed * dir;
+                if (keys.right) angle -= turnSpeed * dir;
             }
-        };
 
-        box.appendChild(div);
-    });
-}
+            car.rotation.y = angle;
+            car.position.x += Math.sin(angle) * speed;
+            car.position.z += Math.cos(angle) * speed;
 
-function upgradeEngine(){
+            // الكاميرا خلف السيارة
+            const camOffset = new THREE.Vector3(0, 3, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            camera.position.copy(car.position).add(camOffset);
+            camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
 
-    if(coins<500){
-        alert("تحتاج 500 عملة");
-        return;
-    }
+            // عداد السرعة
+            document.getElementById('speedometer').innerText = Math.round(Math.abs(speed) * 120) + " KM/H";
 
-    coins-=500;
-    engine++;
+            renderer.render(scene, camera);
+        }
 
-    save();
-    updatePanel();
-}
+        animate();
 
-function upgradeGear(){
-
-    if(coins<700){
-        alert("تحتاج 700 عملة");
-        return;
-    }
-
-    coins-=700;
-    gear++;
-
-    save();
-    updatePanel();
-}
-
-function upgradeTurbo(){
-
-    if(coins<1000){
-        alert("تحتاج 1000 عملة");
-        return;
-    }
-
-    coins-=1000;
-    turbo++;
-
-    save();
-    updatePanel();
-}
-
-function buyHouse(){
-
-    const price=houseLevel*5000;
-
-    if(coins<price){
-        alert("تحتاج "+price+" عملة");
-        return;
-    }
-
-    coins-=price;
-    houseLevel++;
-
-    save();
-    updatePanel();
-    updateHUD();
-}
-
-function race(){
-
-    alert(
-        "🏁 السباق بدأ!\n\n"+
-        "هذه نسخة تجريبية.\n"+
-        "في المرحلة القادمة سنضيف السباقات الحقيقية ضد لاعبين."
-    );
-}
-
-function animate(){
-
-    requestAnimationFrame(animate);
-
-    update();
-
-    renderer.render(scene,camera);
-}
-
-function resize(){
-
-    camera.aspect=innerWidth/innerHeight;
-    camera.updateProjectionMatrix();
-
-    renderer.setSize(innerWidth,innerHeight);
-}
-
-init();
-</script>
-
+        // إعادة الضبط عند تغيير حجم الشاشة
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>

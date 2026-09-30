@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Open World Cars Telegram</title>
+    <title>Open World Cars Telegram v6.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -14,8 +14,8 @@
             -webkit-user-select: none;
         }
         body, html {
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
             overflow: hidden;
             background: #0f172a;
             font-family: system-ui, -apple-system, sans-serif;
@@ -27,39 +27,110 @@
             top: 0;
             left: 0;
         }
-        #loading-screen {
+        
+        /* شاشات القوائم */
+        .overlay-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: #0f172a;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(12px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             z-index: 100;
             color: #ffffff;
-            transition: opacity 0.5s ease;
+            transition: opacity 0.4s ease;
+            padding: 20px;
         }
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(255, 255, 255, 0.1);
-            border-top: 5px solid #38bdf8;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+        
+        .menu-card {
+            background: rgba(30, 41, 59, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 20px 30px;
+            width: 80%;
+            max-width: 480px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+
+        .menu-title {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            color: #38bdf8;
         }
+
+        .menu-subtitle {
+            font-size: 13px;
+            color: #94a3b8;
+            margin-bottom: 18px;
+        }
+
+        .main-btn {
+            width: 100%;
+            padding: 12px 18px;
+            margin: 6px 0;
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
+            transition: transform 0.1s, background 0.2s;
+        }
+        .main-btn:active {
+            transform: scale(0.96);
+            background: linear-gradient(135deg, #0369a1, #075985);
+        }
+        .main-btn.secondary {
+            background: rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        /* متجر السيارات */
+        .shop-items {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .shop-item {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .shop-item-info {
+            text-align: right;
+        }
+        .shop-item-name {
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .shop-item-price {
+            font-size: 12px;
+            color: #facc15;
+        }
+
+        /* واجهة اللعب HUD مصممة للشاشة العريضة */
         #ui {
             position: absolute;
-            top: 15px;
-            left: 15px;
-            right: 15px;
+            top: 12px;
+            left: 20px;
+            right: 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -71,35 +142,37 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 10px 18px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 18px;
             font-weight: 700;
-            font-size: 15px;
+            font-size: 14px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
             pointer-events: auto;
         }
         #speedometer {
             color: #38bdf8;
             font-family: monospace;
-            font-size: 16px;
+            font-size: 15px;
         }
+
+        /* تحسين توزيع أزرار التحكم للشاشة العريضة */
         .controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 25px;
             width: 100%;
             display: flex;
             justify-content: space-between;
-            padding: 0 20px;
+            padding: 0 35px;
             box-sizing: border-box;
             z-index: 10;
         }
         .btn-group {
             display: flex;
-            gap: 15px;
+            gap: 20px;
         }
         .btn {
-            width: 68px;
-            height: 68px;
+            width: 70px;
+            height: 70px;
             background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(8px);
             border: 2px solid rgba(255, 255, 255, 0.3);
@@ -108,10 +181,10 @@
             justify-content: center;
             align-items: center;
             color: white;
-            font-size: 24px;
+            font-size: 26px;
             font-weight: bold;
             touch-action: manipulation;
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
         }
         .btn:active {
             background: rgba(56, 189, 248, 0.85);
@@ -123,19 +196,61 @@
 </head>
 <body>
 
-    <div id="loading-screen">
-        <div class="spinner"></div>
-        <h2>جاري تحضير المحرك والمدينة... 🎮</h2>
+    <!-- الشاشة الرئيسية -->
+    <div class="overlay-screen" id="main-menu">
+        <div class="menu-card">
+            <div class="menu-title">سيارات العراق 3D</div>
+            <div class="menu-subtitle">الوضع العريض - تجربة قيادة واقعية</div>
+            <button class="main-btn" id="btn-start-game">▶ ابدأ اللعب</button>
+            <button class="main-btn secondary" id="btn-open-shop">🏎️ متجر السيارات</button>
+        </div>
+    </div>
+
+    <!-- متجر السيارات -->
+    <div class="overlay-screen" id="shop-menu" style="display: none;">
+        <div class="menu-card">
+            <div class="menu-title">متجر السيارات</div>
+            <div class="menu-subtitle">رصيدك: 💰 <span id="shop-coins-display">0</span></div>
+            
+            <div class="shop-items">
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">سيارة المدينة</div>
+                        <div class="shop-item-price">مجاناً</div>
+                    </div>
+                    <button class="main-btn" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="selectCar(0)">مجهزة</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">تاكسي بغداد 🚕</div>
+                        <div class="shop-item-price">💰 100 عملة</div>
+                    </div>
+                    <button class="main-btn secondary" id="buy-btn-1" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="buyCar(1, 100)">شراء</button>
+                </div>
+                <div class="shop-item">
+                    <div class="shop-item-info">
+                        <div class="shop-item-name">سيارة سبورت 🏎️</div>
+                        <div class="shop-item-price">💰 250 عملة</div>
+                    </div>
+                    <button class="main-btn secondary" id="buy-btn-2" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="buyCar(2, 250)">شراء</button>
+                </div>
+            </div>
+
+            <button class="main-btn secondary" id="btn-close-shop">الرجوع للقائمة</button>
+        </div>
     </div>
 
     <div id="game-container"></div>
 
+    <!-- واجهة القيادة -->
     <div id="ui">
         <div class="hud-card">💰 <span id="coins-display">0</span></div>
-        <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️ نهار</button>
+        <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️️ نهار</button>
+        <button class="hud-card" id="btn-pause-menu" style="cursor: pointer;">⚙️</button>
         <div class="hud-card" id="speedometer">0 KM/H</div>
     </div>
 
+    <!-- التحكم -->
     <div class="controls">
         <div class="btn-group">
             <div class="btn" id="btn-left">◀</div>
@@ -152,14 +267,24 @@
         if (tg) {
             tg.expand();
             tg.ready();
+            // طلب تدوير الشاشة أفقياً من التلجرام
+            try {
+                tg.lockOrientation("landscape");
+            } catch (e) {
+                console.log("Orientation lock not supported on this version");
+            }
         }
 
-        // --- محاكي صوت المحرك الناعم والواقعي (Smooth Engine Synthesizer) ---
+        // طلب دوران الشاشة أفقياً عبر المتصفح
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(() => {});
+        }
+
+        // --- محاكي الصوت (Audio Synthesizer) ---
         let audioCtx = null;
         let engineOsc1 = null;
         let engineOsc2 = null;
         let engineFilter = null;
-        let engineGain = null;
 
         function initAudio() {
             if (audioCtx) return;
@@ -168,15 +293,15 @@
             engineOsc1 = audioCtx.createOscillator();
             engineOsc2 = audioCtx.createOscillator();
             engineFilter = audioCtx.createBiquadFilter();
-            engineGain = audioCtx.createGain();
+            const engineGain = audioCtx.createGain();
 
-            engineOsc1.type = 'triangle'; // صوت ناعم
+            engineOsc1.type = 'triangle';
             engineOsc2.type = 'sine';
 
             engineFilter.type = 'lowpass';
-            engineFilter.frequency.setValueAtTime(150, audioCtx.currentTime);
+            engineFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
 
-            engineGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+            engineGain.gain.setValueAtTime(0.07, audioCtx.currentTime);
 
             engineOsc1.connect(engineFilter);
             engineOsc2.connect(engineFilter);
@@ -192,8 +317,8 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.12);
+            osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1300, audioCtx.currentTime + 0.12);
             gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
             osc.connect(gain);
@@ -214,13 +339,13 @@
             engineFilter.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.05);
         }
 
-        // --- المشهد والرسومات الثلاثية الأبعاد ---
+        // --- Three.js Setup ---
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x38bdf8);
         scene.fog = new THREE.FogExp2(0x38bdf8, 0.003);
 
-        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -256,39 +381,28 @@
         grass.receiveShadow = true;
         scene.add(grass);
 
-        // الشوارع والأرصفة
+        // الطرق والأرصفة والمطبات
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
         const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
         const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
+        const bumpMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4 });
 
         const worldSize = 600;
         const roadSpacing = 120;
         const roadWidth = 20;
 
         for (let pos = -worldSize / 2 + 60; pos <= worldSize / 2 - 60; pos += roadSpacing) {
-            // شوارع عمودية
             const roadV = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, worldSize), roadMat);
             roadV.rotation.x = -Math.PI / 2;
             roadV.position.set(pos, 0.02, 0);
             roadV.receiveShadow = true;
             scene.add(roadV);
 
-            // خط وسط
             const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.5, worldSize), lineMat);
             lineV.rotation.x = -Math.PI / 2;
             lineV.position.set(pos, 0.03, 0);
             scene.add(lineV);
 
-            // أرصفة جانبية
-            const curbL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, worldSize), curbMat);
-            curbL.position.set(pos - roadWidth / 2 - 0.3, 0.15, 0);
-            scene.add(curbL);
-
-            const curbR = curbL.clone();
-            curbR.position.x = pos + roadWidth / 2 + 0.3;
-            scene.add(curbR);
-
-            // شوارع أفقية
             const roadH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, roadWidth), roadMat);
             roadH.rotation.x = -Math.PI / 2;
             roadH.position.set(0, 0.02, pos);
@@ -299,29 +413,44 @@
             lineH.rotation.x = -Math.PI / 2;
             lineH.position.set(0, 0.03, pos);
             scene.add(lineH);
+
+            const bump = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, roadWidth, 12), bumpMat);
+            bump.rotation.z = Math.PI / 2;
+            bump.position.set(pos, 0.1, pos + 35);
+            scene.add(bump);
         }
 
-        // تكستشر المباني
-        function createBuildingTexture() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#334155';
-            ctx.fillRect(0, 0, 256, 512);
-            ctx.fillStyle = '#fef08a';
-            for (let y = 20; y < 500; y += 40) {
-                for (let x = 20; x < 240; x += 35) {
-                    if (Math.random() > 0.3) ctx.fillRect(x, y, 20, 25);
-                }
+        // إشارات المرور
+        const trafficLights = [];
+        const redMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+        const greenMat = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+        for (let bx = -worldSize / 2 + 60; bx < worldSize / 2 - 60; bx += roadSpacing) {
+            for (let bz = -worldSize / 2 + 60; bz < worldSize / 2 - 60; bz += roadSpacing) {
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 7), curbMat);
+                pole.position.set(bx + roadWidth / 2 + 2, 3.5, bz + roadWidth / 2 + 2);
+
+                const box = new THREE.Mesh(new THREE.BoxGeometry(0.8, 2.2, 0.8), roadMat);
+                box.position.set(bx + roadWidth / 2 + 2, 6, bz + roadWidth / 2 + 2);
+
+                const lightMesh = new THREE.Mesh(new THREE.SphereGeometry(0.3, 12, 12), redMat);
+                lightMesh.position.set(bx + roadWidth / 2 + 2, 6.2, bz + roadWidth / 2 + 1.5);
+
+                scene.add(pole);
+                scene.add(box);
+                scene.add(lightMesh);
+
+                trafficLights.push(lightMesh);
             }
-            return new THREE.CanvasTexture(canvas);
         }
 
-        const bTexture = createBuildingTexture();
-        bTexture.wrapS = THREE.RepeatWrapping;
-        bTexture.wrapT = THREE.RepeatWrapping;
+        setInterval(() => {
+            trafficLights.forEach(tl => {
+                tl.material = Math.random() > 0.5 ? greenMat : redMat;
+            });
+        }, 4000);
 
+        // المباني والأشجار
         const colliders = [];
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
         const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.6 });
@@ -336,7 +465,7 @@
 
                 const building = new THREE.Mesh(
                     new THREE.BoxGeometry(bWidth, bHeight, bDepth),
-                    new THREE.MeshStandardMaterial({ map: bTexture, roughness: 0.4 })
+                    new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 })
                 );
                 building.position.set(cx, bHeight / 2, cz);
                 building.castShadow = true;
@@ -344,31 +473,25 @@
                 scene.add(building);
                 colliders.push({ x: cx, z: cz, radius: 20 });
 
-                // الأشجار على الأرض تماماً
-                for (let i = 0; i < 2; i++) {
-                    const tree = new THREE.Group();
-                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2), trunkMat);
-                    trunk.position.y = 1;
-                    tree.add(trunk);
-                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 4.5, 8), leavesMat);
-                    leaves.position.y = 3.25;
-                    leaves.castShadow = true;
-                    tree.add(leaves);
-
-                    const tx = cx + (Math.random() - 0.5) * 45;
-                    const tz = cz + (Math.random() - 0.5) * 45;
-                    tree.position.set(tx, 0, tz);
-                    scene.add(tree);
-                }
+                const tree = new THREE.Group();
+                const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2), trunkMat);
+                trunk.position.y = 1;
+                tree.add(trunk);
+                const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 4.5, 8), leavesMat);
+                leaves.position.y = 3.25;
+                leaves.castShadow = true;
+                tree.add(leaves);
+                tree.position.set(cx + 15, 0, cz + 15);
+                scene.add(tree);
             }
         }
 
-        // العملات الذهبية
+        // العملات
         const coins = [];
         const coinGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 16);
         const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
 
-        for (let i = 0; i < 35; i++) {
+        for (let i = 0; i < 40; i++) {
             const coin = new THREE.Mesh(coinGeo, coinMat);
             coin.rotation.x = Math.PI / 2;
             const rx = (Math.floor(Math.random() * 4) - 1.5) * roadSpacing;
@@ -379,8 +502,8 @@
             coins.push(coin);
         }
 
-        // دالة إنشاء سيارة
-        function createCar(colorHex) {
+        // بناء السيارات
+        function createCarMesh(colorHex, isTaxi = false) {
             const cGroup = new THREE.Group();
             const paintMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.7, roughness: 0.2 });
             const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
@@ -395,6 +518,12 @@
             cabin.position.set(0, 1.1, -0.3);
             cGroup.add(cabin);
 
+            if (isTaxi) {
+                const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.4), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
+                taxiSign.position.set(0, 1.6, -0.3);
+                cGroup.add(taxiSign);
+            }
+
             const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 24);
             const wPos = [[-1.1, 0.4, 1.2], [1.1, 0.4, 1.2], [-1.1, 0.4, -1.2], [1.1, 0.4, -1.2]];
             wPos.forEach(pos => {
@@ -408,34 +537,57 @@
             return cGroup;
         }
 
-        // سيارة اللاعب
-        const car = createCar(0x0284c7);
-        const lightMatFront = new THREE.MeshBasicMaterial({ color: 0xffffcc });
-        const lightMatBack = new THREE.MeshBasicMaterial({ color: 0x550000 });
+        const carsData = [
+            { id: 0, color: 0x0284c7, maxSpeed: 1.1, isTaxi: false, name: "عادية" },
+            { id: 1, color: 0xeab308, maxSpeed: 1.3, isTaxi: true, name: "تاكسي" },
+            { id: 2, color: 0xdc2626, maxSpeed: 1.6, isTaxi: false, name: "سبورت" }
+        ];
 
-        const brakeLightL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), lightMatBack);
-        brakeLightL.position.set(-0.7, 0.6, -2.1);
-        car.add(brakeLightL);
+        let selectedCarIndex = 0;
+        let unlockedCars = [true, false, false];
+        let totalCoins = 0;
 
-        const brakeLightR = brakeLightL.clone();
-        brakeLightR.position.x = 0.7;
-        car.add(brakeLightR);
-
+        let car = createCarMesh(carsData[0].color, false);
         scene.add(car);
 
-        // سيارات الذكاء الاصطناعي (AI Traffic)
-        const trafficCars = [];
-        const trafficColors = [0xd97706, 0xdc2626, 0x16a34a, 0x9333ea];
-
-        for (let i = 0; i < 6; i++) {
-            const aiCar = createCar(trafficColors[i % trafficColors.length]);
-            const roadX = (i - 2) * roadSpacing;
-            aiCar.position.set(roadX + 4, 0, (Math.random() - 0.5) * 300);
-            scene.add(aiCar);
-            trafficCars.push({ mesh: aiCar, speed: 0.3 + Math.random() * 0.2 });
+        function updateCarModel(index) {
+            scene.remove(car);
+            selectedCarIndex = index;
+            car = createCarMesh(carsData[index].color, carsData[index].isTaxi);
+            scene.add(car);
         }
 
-        // نظام النهار والليل
+        function selectCar(index) {
+            if (unlockedCars[index]) {
+                updateCarModel(index);
+                alert("تم تجهيز السيارة بنجاح!");
+            }
+        }
+
+        function buyCar(index, price) {
+            if (totalCoins >= price) {
+                totalCoins -= price;
+                unlockedCars[index] = true;
+                document.getElementById('coins-display').innerText = totalCoins;
+                document.getElementById('shop-coins-display').innerText = totalCoins;
+                document.getElementById(`buy-btn-${index}`).innerText = "مجهزة";
+                document.getElementById(`buy-btn-${index}`).className = "main-btn";
+                updateCarModel(index);
+            } else {
+                alert("عذراً، لا تمتلك عملات كافية للشراء!");
+            }
+        }
+
+        // الذكاء الاصطناعي
+        const trafficCars = [];
+        for (let i = 0; i < 5; i++) {
+            const aiCar = createCarMesh(0x64748b, false);
+            aiCar.position.set((i - 2) * roadSpacing + 4, 0, (Math.random() - 0.5) * 300);
+            scene.add(aiCar);
+            trafficCars.push({ mesh: aiCar, speed: 0.3 });
+        }
+
+        // الليل والنهار
         let isNight = false;
         document.getElementById('btn-toggle-night').addEventListener('click', () => {
             isNight = !isNight;
@@ -454,14 +606,30 @@
             }
         });
 
-        // متغيرات الحركة
+        // القوائم
+        document.getElementById('btn-start-game').addEventListener('click', () => {
+            initAudio();
+            document.getElementById('main-menu').style.display = 'none';
+        });
+
+        document.getElementById('btn-open-shop').addEventListener('click', () => {
+            document.getElementById('shop-coins-display').innerText = totalCoins;
+            document.getElementById('shop-menu').style.display = 'flex';
+        });
+
+        document.getElementById('btn-close-shop').addEventListener('click', () => {
+            document.getElementById('shop-menu').style.display = 'none';
+        });
+
+        document.getElementById('btn-pause-menu').addEventListener('click', () => {
+            document.getElementById('main-menu').style.display = 'flex';
+        });
+
+        // الفيزياء والتحكم
         let speed = 0;
-        let maxSpeed = 1.1;
         let accel = 0.018;
         let friction = 0.009;
         let angle = 0;
-        let turnAngle = 0;
-        let totalCoins = 0;
 
         const keys = { gas: false, brake: false, left: false, right: false };
 
@@ -483,21 +651,20 @@
         function animate() {
             requestAnimationFrame(animate);
 
+            const currentMaxSpeed = carsData[selectedCarIndex].maxSpeed;
+
             if (keys.gas) {
-                speed = Math.min(speed + accel, maxSpeed);
-                lightMatBack.color.setHex(0x550000);
+                speed = Math.min(speed + accel, currentMaxSpeed);
             } else if (keys.brake) {
-                speed = Math.max(speed - accel, -maxSpeed / 2);
-                lightMatBack.color.setHex(0xff0000);
+                speed = Math.max(speed - accel, -currentMaxSpeed / 2);
             } else {
-                lightMatBack.color.setHex(0x550000);
                 if (speed > 0) speed = Math.max(0, speed - friction);
                 if (speed < 0) speed = Math.min(0, speed + friction);
             }
 
             updateEngineSound(speed);
 
-            turnAngle = 0;
+            let turnAngle = 0;
             if (keys.left) turnAngle = 0.35;
             if (keys.right) turnAngle = -0.35;
 
@@ -526,13 +693,11 @@
 
             car.rotation.y = angle;
 
-            // تحريك سيارات الذكاء الاصطناعي
             trafficCars.forEach(tc => {
                 tc.mesh.position.z += tc.speed;
                 if (tc.mesh.position.z > worldSize / 2) tc.mesh.position.z = -worldSize / 2;
             });
 
-            // فحص جمع النقود
             coins.forEach(coin => {
                 if (coin.visible) {
                     coin.rotation.z += 0.04;
@@ -545,8 +710,8 @@
                 }
             });
 
-            // الكاميرا
-            const camOffset = new THREE.Vector3(0, 3.2, -8).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            // كاميرات مخصصة للوضع العريض (أفقياً)
+            const camOffset = new THREE.Vector3(0, 2.8, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             camera.position.copy(car.position).add(camOffset);
             camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
 
@@ -555,11 +720,7 @@
             renderer.render(scene, camera);
         }
 
-        setTimeout(() => {
-            document.getElementById('loading-screen').style.opacity = '0';
-            setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
-            animate();
-        }, 800);
+        animate();
 
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;

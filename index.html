@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Open World Cars Telegram v6.0</title>
+    <title>Open World Cars Telegram v8.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
@@ -125,7 +125,7 @@
             color: #facc15;
         }
 
-        /* واجهة اللعب HUD مصممة للشاشة العريضة */
+        /* واجهة اللعب HUD */
         #ui {
             position: absolute;
             top: 12px;
@@ -155,7 +155,7 @@
             font-size: 15px;
         }
 
-        /* تحسين توزيع أزرار التحكم للشاشة العريضة */
+        /* أزرار التحكم للشاشة العريضة */
         .controls {
             position: absolute;
             bottom: 25px;
@@ -245,7 +245,7 @@
     <!-- واجهة القيادة -->
     <div id="ui">
         <div class="hud-card">💰 <span id="coins-display">0</span></div>
-        <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️️ نهار</button>
+        <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️ نهار</button>
         <button class="hud-card" id="btn-pause-menu" style="cursor: pointer;">⚙️</button>
         <div class="hud-card" id="speedometer">0 KM/H</div>
     </div>
@@ -267,15 +267,16 @@
         if (tg) {
             tg.expand();
             tg.ready();
-            // طلب تدوير الشاشة أفقياً من التلجرام
-            try {
-                tg.lockOrientation("landscape");
-            } catch (e) {
-                console.log("Orientation lock not supported on this version");
+            if (tg.requestFullscreen) {
+                tg.requestFullscreen();
+            }
+            if (typeof tg.setOrientation === 'function') {
+                tg.setOrientation('landscape');
+            } else if (typeof tg.lockOrientation === 'function') {
+                tg.lockOrientation('landscape');
             }
         }
 
-        // طلب دوران الشاشة أفقياً عبر المتصفح
         if (screen.orientation && screen.orientation.lock) {
             screen.orientation.lock('landscape').catch(() => {});
         }
@@ -710,7 +711,6 @@
                 }
             });
 
-            // كاميرات مخصصة للوضع العريض (أفقياً)
             const camOffset = new THREE.Vector3(0, 2.8, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             camera.position.copy(car.position).add(camOffset);
             camera.lookAt(car.position.x, car.position.y + 1, car.position.z);

@@ -71,16 +71,17 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff;
-            padding: 10px 20px;
+            padding: 10px 18px;
             border-radius: 20px;
             font-weight: 700;
-            font-size: 16px;
+            font-size: 15px;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
         }
         #speedometer {
             color: #38bdf8;
             font-family: monospace;
-            font-size: 18px;
+            font-size: 16px;
         }
         .controls {
             position: absolute;
@@ -124,13 +125,14 @@
 
     <div id="loading-screen">
         <div class="spinner"></div>
-        <h2>جاري تشغيل اللعبة المحدثة... 🎮</h2>
+        <h2>جاري تحضير المحرك والمدينة... 🎮</h2>
     </div>
 
     <div id="game-container"></div>
 
     <div id="ui">
         <div class="hud-card">💰 <span id="coins-display">0</span></div>
+        <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️ نهار</button>
         <div class="hud-card" id="speedometer">0 KM/H</div>
     </div>
 
@@ -152,23 +154,37 @@
             tg.ready();
         }
 
-        // --- نظام الصوت الاصطناعي (Audio Synthesizer) ---
+        // --- محاكي صوت المحرك الناعم والواقعي (Smooth Engine Synthesizer) ---
         let audioCtx = null;
-        let engineOsc = null;
+        let engineOsc1 = null;
+        let engineOsc2 = null;
+        let engineFilter = null;
         let engineGain = null;
 
         function initAudio() {
             if (audioCtx) return;
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            
-            engineOsc = audioCtx.createOscillator();
+
+            engineOsc1 = audioCtx.createOscillator();
+            engineOsc2 = audioCtx.createOscillator();
+            engineFilter = audioCtx.createBiquadFilter();
             engineGain = audioCtx.createGain();
-            engineOsc.type = 'sawtooth';
-            engineOsc.frequency.setValueAtTime(30, audioCtx.currentTime);
-            engineGain.gain.setValueAtTime(0.05, audioCtx.currentTime);
-            engineOsc.connect(engineGain);
+
+            engineOsc1.type = 'triangle'; // صوت ناعم
+            engineOsc2.type = 'sine';
+
+            engineFilter.type = 'lowpass';
+            engineFilter.frequency.setValueAtTime(150, audioCtx.currentTime);
+
+            engineGain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+
+            engineOsc1.connect(engineFilter);
+            engineOsc2.connect(engineFilter);
+            engineFilter.connect(engineGain);
             engineGain.connect(audioCtx.destination);
-            engineOsc.start();
+
+            engineOsc1.start();
+            engineOsc2.start();
         }
 
         function playCoinSound() {
@@ -176,23 +192,29 @@
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
             osc.type = 'sine';
-            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.15);
-            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+            osc.frequency.setValueAtTime(600, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(1200, audioCtx.currentTime + 0.12);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.15);
+            osc.stop(audioCtx.currentTime + 0.12);
         }
 
         function updateEngineSound(currentSpeed) {
-            if (!engineOsc) return;
-            const pitch = 30 + Math.abs(currentSpeed) * 120;
-            engineOsc.frequency.setValueAtTime(pitch, audioCtx.currentTime);
+            if (!engineOsc1 || !audioCtx) return;
+            const normSpeed = Math.abs(currentSpeed);
+            const freq1 = 25 + normSpeed * 70;
+            const freq2 = 50 + normSpeed * 140;
+            const cutoff = 120 + normSpeed * 400;
+
+            engineOsc1.frequency.setTargetAtTime(freq1, audioCtx.currentTime, 0.05);
+            engineOsc2.frequency.setTargetAtTime(freq2, audioCtx.currentTime, 0.05);
+            engineFilter.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.05);
         }
 
-        // --- إعداد المشهد الرسومي Three.js ---
+        // --- المشهد والرسومات الثلاثية الأبعاد ---
         const container = document.getElementById('game-container');
         const scene = new THREE.Scene();
         scene.background = new THREE.Color(0x38bdf8);
@@ -205,10 +227,10 @@
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.2;
+        renderer.toneMappingExposure = 1.1;
         container.appendChild(renderer.domElement);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
 
         const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
@@ -226,33 +248,47 @@
         grassTex.wrapT = THREE.RepeatWrapping;
         grassTex.repeat.set(40, 40);
 
-        const grassGeo = new THREE.PlaneGeometry(600, 600);
-        const grassMat = new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.8 });
-        const grass = new THREE.Mesh(grassGeo, grassMat);
+        const grass = new THREE.Mesh(
+            new THREE.PlaneGeometry(600, 600),
+            new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.8 })
+        );
         grass.rotation.x = -Math.PI / 2;
         grass.receiveShadow = true;
         scene.add(grass);
 
-        // الشوارع والمباني
+        // الشوارع والأرصفة
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
         const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
+        const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
 
         const worldSize = 600;
         const roadSpacing = 120;
         const roadWidth = 20;
 
         for (let pos = -worldSize / 2 + 60; pos <= worldSize / 2 - 60; pos += roadSpacing) {
+            // شوارع عمودية
             const roadV = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, worldSize), roadMat);
             roadV.rotation.x = -Math.PI / 2;
             roadV.position.set(pos, 0.02, 0);
             roadV.receiveShadow = true;
             scene.add(roadV);
 
+            // خط وسط
             const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.5, worldSize), lineMat);
             lineV.rotation.x = -Math.PI / 2;
             lineV.position.set(pos, 0.03, 0);
             scene.add(lineV);
 
+            // أرصفة جانبية
+            const curbL = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.3, worldSize), curbMat);
+            curbL.position.set(pos - roadWidth / 2 - 0.3, 0.15, 0);
+            scene.add(curbL);
+
+            const curbR = curbL.clone();
+            curbR.position.x = pos + roadWidth / 2 + 0.3;
+            scene.add(curbR);
+
+            // شوارع أفقية
             const roadH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, roadWidth), roadMat);
             roadH.rotation.x = -Math.PI / 2;
             roadH.position.set(0, 0.02, pos);
@@ -287,11 +323,8 @@
         bTexture.wrapT = THREE.RepeatWrapping;
 
         const colliders = [];
-
-        // إنشاء المباني والبيئة الجانبية (أشجار وأعمدة إضاءة)
         const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
         const leavesMat = new THREE.MeshStandardMaterial({ color: 0x2e8b57, roughness: 0.6 });
-        const poleMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.8 });
 
         for (let bx = -worldSize / 2 + 60; bx < worldSize / 2 - 60; bx += roadSpacing) {
             for (let bz = -worldSize / 2 + 60; bz < worldSize / 2 - 60; bz += roadSpacing) {
@@ -301,40 +334,41 @@
                 const cx = bx + roadSpacing / 2;
                 const cz = bz + roadSpacing / 2;
 
-                const bGeo = new THREE.BoxGeometry(bWidth, bHeight, bDepth);
-                const bMat = new THREE.MeshStandardMaterial({ map: bTexture, roughness: 0.4 });
-                const building = new THREE.Mesh(bGeo, bMat);
+                const building = new THREE.Mesh(
+                    new THREE.BoxGeometry(bWidth, bHeight, bDepth),
+                    new THREE.MeshStandardMaterial({ map: bTexture, roughness: 0.4 })
+                );
                 building.position.set(cx, bHeight / 2, cz);
                 building.castShadow = true;
                 building.receiveShadow = true;
                 scene.add(building);
                 colliders.push({ x: cx, z: cz, radius: 20 });
 
-                // إضافة أشجار حول المباني
+                // الأشجار على الأرض تماماً
                 for (let i = 0; i < 2; i++) {
                     const tree = new THREE.Group();
-                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 3), trunkMat);
-                    trunk.position.y = 1.5;
+                    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.4, 2), trunkMat);
+                    trunk.position.y = 1;
                     tree.add(trunk);
-                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 5, 8), leavesMat);
-                    leaves.position.y = 4;
+                    const leaves = new THREE.Mesh(new THREE.ConeGeometry(2, 4.5, 8), leavesMat);
+                    leaves.position.y = 3.25;
                     leaves.castShadow = true;
                     tree.add(leaves);
 
-                    const tx = cx + (Math.random() - 0.5) * 50;
-                    const tz = cz + (Math.random() - 0.5) * 50;
+                    const tx = cx + (Math.random() - 0.5) * 45;
+                    const tz = cz + (Math.random() - 0.5) * 45;
                     tree.position.set(tx, 0, tz);
                     scene.add(tree);
                 }
             }
         }
 
-        // إنشاء العملات الذهبية (Coins)
+        // العملات الذهبية
         const coins = [];
         const coinGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 16);
         const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
 
-        for (let i = 0; i < 40; i++) {
+        for (let i = 0; i < 35; i++) {
             const coin = new THREE.Mesh(coinGeo, coinMat);
             coin.rotation.x = Math.PI / 2;
             const rx = (Math.floor(Math.random() * 4) - 1.5) * roadSpacing;
@@ -345,43 +379,39 @@
             coins.push(coin);
         }
 
-        // إنشاء السيارة وأضوائها
-        const car = new THREE.Group();
-        const paintMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, metalness: 0.7, roughness: 0.2 });
-        const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
-        const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.8 });
+        // دالة إنشاء سيارة
+        function createCar(colorHex) {
+            const cGroup = new THREE.Group();
+            const paintMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.7, roughness: 0.2 });
+            const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
+            const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.8 });
 
-        const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.2), paintMat);
-        body.position.y = 0.5;
-        body.castShadow = true;
-        car.add(body);
+            const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.2), paintMat);
+            body.position.y = 0.5;
+            body.castShadow = true;
+            cGroup.add(body);
 
-        const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2.1), glassMat);
-        cabin.position.set(0, 1.1, -0.3);
-        car.add(cabin);
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2.1), glassMat);
+            cabin.position.set(0, 1.1, -0.3);
+            cGroup.add(cabin);
 
-        // العجلات
-        const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 24);
-        const wPos = [[-1.1, 0.4, 1.2], [1.1, 0.4, 1.2], [-1.1, 0.4, -1.2], [1.1, 0.4, -1.2]];
-        wPos.forEach(pos => {
-            const w = new THREE.Mesh(wheelGeo, blackMat);
-            w.rotation.z = Math.PI / 2;
-            w.position.set(...pos);
-            w.castShadow = true;
-            car.add(w);
-        });
+            const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 24);
+            const wPos = [[-1.1, 0.4, 1.2], [1.1, 0.4, 1.2], [-1.1, 0.4, -1.2], [1.1, 0.4, -1.2]];
+            wPos.forEach(pos => {
+                const w = new THREE.Mesh(wheelGeo, blackMat);
+                w.rotation.z = Math.PI / 2;
+                w.position.set(...pos);
+                w.castShadow = true;
+                cGroup.add(w);
+            });
 
-        // الأضواء الأمامية والخلفية للسيارة
+            return cGroup;
+        }
+
+        // سيارة اللاعب
+        const car = createCar(0x0284c7);
         const lightMatFront = new THREE.MeshBasicMaterial({ color: 0xffffcc });
         const lightMatBack = new THREE.MeshBasicMaterial({ color: 0x550000 });
-
-        const headLightL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), lightMatFront);
-        headLightL.position.set(-0.7, 0.6, 2.1);
-        car.add(headLightL);
-
-        const headLightR = headLightL.clone();
-        headLightR.position.x = 0.7;
-        car.add(headLightR);
 
         const brakeLightL = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.2, 0.1), lightMatBack);
         brakeLightL.position.set(-0.7, 0.6, -2.1);
@@ -393,7 +423,38 @@
 
         scene.add(car);
 
-        // متغيرات الحركة والتحكم
+        // سيارات الذكاء الاصطناعي (AI Traffic)
+        const trafficCars = [];
+        const trafficColors = [0xd97706, 0xdc2626, 0x16a34a, 0x9333ea];
+
+        for (let i = 0; i < 6; i++) {
+            const aiCar = createCar(trafficColors[i % trafficColors.length]);
+            const roadX = (i - 2) * roadSpacing;
+            aiCar.position.set(roadX + 4, 0, (Math.random() - 0.5) * 300);
+            scene.add(aiCar);
+            trafficCars.push({ mesh: aiCar, speed: 0.3 + Math.random() * 0.2 });
+        }
+
+        // نظام النهار والليل
+        let isNight = false;
+        document.getElementById('btn-toggle-night').addEventListener('click', () => {
+            isNight = !isNight;
+            if (isNight) {
+                scene.background.setHex(0x020617);
+                scene.fog.color.setHex(0x020617);
+                ambientLight.intensity = 0.15;
+                sunLight.intensity = 0.1;
+                document.getElementById('btn-toggle-night').innerText = "🌙 ليل";
+            } else {
+                scene.background.setHex(0x38bdf8);
+                scene.fog.color.setHex(0x38bdf8);
+                ambientLight.intensity = 0.8;
+                sunLight.intensity = 1.2;
+                document.getElementById('btn-toggle-night').innerText = "☀️ نهار";
+            }
+        });
+
+        // متغيرات الحركة
         let speed = 0;
         let maxSpeed = 1.1;
         let accel = 0.018;
@@ -422,13 +483,12 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            // الفيزياء والتسارع
             if (keys.gas) {
                 speed = Math.min(speed + accel, maxSpeed);
-                lightMatBack.color.setHex(0x550000); // أضواء خلفية عادية
+                lightMatBack.color.setHex(0x550000);
             } else if (keys.brake) {
                 speed = Math.max(speed - accel, -maxSpeed / 2);
-                lightMatBack.color.setHex(0xff0000); // إضاءة أضواء الفرامل باللون الأحمر الساطع
+                lightMatBack.color.setHex(0xff0000);
             } else {
                 lightMatBack.color.setHex(0x550000);
                 if (speed > 0) speed = Math.max(0, speed - friction);
@@ -449,7 +509,6 @@
             const nextX = car.position.x + Math.sin(angle) * speed;
             const nextZ = car.position.z + Math.cos(angle) * speed;
 
-            // التصادم مع المباني
             let collide = false;
             for (let c of colliders) {
                 if (Math.hypot(nextX - c.x, nextZ - c.z) < c.radius) {
@@ -467,7 +526,13 @@
 
             car.rotation.y = angle;
 
-            // دوران وفحص جمع العملات الذهبية
+            // تحريك سيارات الذكاء الاصطناعي
+            trafficCars.forEach(tc => {
+                tc.mesh.position.z += tc.speed;
+                if (tc.mesh.position.z > worldSize / 2) tc.mesh.position.z = -worldSize / 2;
+            });
+
+            // فحص جمع النقود
             coins.forEach(coin => {
                 if (coin.visible) {
                     coin.rotation.z += 0.04;

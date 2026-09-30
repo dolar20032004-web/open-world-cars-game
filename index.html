@@ -3,199 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Open World Cars Telegram v9.0</title>
+    <title>Open World Cars Telegram v11.0</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-        body, html {
-            width: 100vw;
-            height: 100vh;
-            overflow: hidden;
-            background: #0f172a;
-            font-family: system-ui, -apple-system, sans-serif;
-        }
-        #game-container {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+        body, html { width: 100vw; height: 100vh; overflow: hidden; background: #0f172a; font-family: system-ui, -apple-system, sans-serif; }
+        #game-container { width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
         
         .overlay-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(12px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            color: #ffffff;
-            transition: opacity 0.4s ease;
-            padding: 20px;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px);
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 100; color: #ffffff; padding: 20px;
         }
-        
         .menu-card {
-            background: rgba(30, 41, 59, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            border-radius: 24px;
-            padding: 20px 30px;
-            width: 80%;
-            max-width: 480px;
-            text-align: center;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            background: rgba(30, 41, 59, 0.85); border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 24px; padding: 20px 30px; width: 85%; max-width: 480px; text-align: center;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6); max-height: 90vh; overflow-y: auto;
         }
-
-        .menu-title {
-            font-size: 24px;
-            font-weight: 800;
-            margin-bottom: 6px;
-            color: #38bdf8;
-        }
-
-        .menu-subtitle {
-            font-size: 13px;
-            color: #94a3b8;
-            margin-bottom: 18px;
-        }
-
+        .menu-title { font-size: 22px; font-weight: 800; margin-bottom: 4px; color: #38bdf8; }
+        .menu-subtitle { font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
         .main-btn {
-            width: 100%;
-            padding: 12px 18px;
-            margin: 6px 0;
-            background: linear-gradient(135deg, #0284c7, #0369a1);
-            border: none;
-            border-radius: 12px;
-            color: white;
-            font-size: 15px;
-            font-weight: 700;
-            cursor: pointer;
+            width: 100%; padding: 10px 16px; margin: 5px 0;
+            background: linear-gradient(135deg, #0284c7, #0369a1); border: none; border-radius: 12px;
+            color: white; font-size: 14px; font-weight: 700; cursor: pointer;
             box-shadow: 0 4px 12px rgba(2, 132, 199, 0.4);
-            transition: transform 0.1s, background 0.2s;
         }
-        .main-btn:active {
-            transform: scale(0.96);
-            background: linear-gradient(135deg, #0369a1, #075985);
-        }
-        .main-btn.secondary {
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: none;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .shop-items {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 200px;
-            overflow-y: auto;
-            margin-bottom: 15px;
-        }
+        .main-btn:active { transform: scale(0.96); }
+        .main-btn.secondary { background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); }
+        
+        .shop-items { display: flex; flex-direction: column; gap: 8px; max-height: 160px; overflow-y: auto; margin-bottom: 10px; }
         .shop-item {
-            background: rgba(15, 23, 42, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 14px;
-            padding: 10px 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px; padding: 8px 12px; display: flex; justify-content: space-between; align-items: center;
         }
-        .shop-item-info {
-            text-align: right;
-        }
-        .shop-item-name {
-            font-size: 14px;
-            font-weight: 700;
-        }
-        .shop-item-price {
-            font-size: 12px;
-            color: #facc15;
-        }
+        .shop-item-info { text-align: right; }
+        .shop-item-name { font-size: 13px; font-weight: 700; }
+        .shop-item-price { font-size: 11px; color: #facc15; }
 
         #ui {
-            position: absolute;
-            top: 12px;
-            left: 20px;
-            right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            z-index: 10;
-            pointer-events: none;
+            position: absolute; top: 10px; left: 15px; right: 15px;
+            display: flex; justify-content: space-between; align-items: center; z-index: 10; pointer-events: none;
+            flex-wrap: wrap; gap: 6px;
         }
         .hud-card {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            color: #fff;
-            padding: 8px 14px;
-            border-radius: 18px;
-            font-weight: 700;
-            font-size: 13px;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
-            pointer-events: auto;
+            background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.2); color: #fff;
+            padding: 6px 10px; border-radius: 14px; font-weight: 700; font-size: 12px; pointer-events: auto;
         }
-        #speedometer {
-            color: #38bdf8;
-            font-family: monospace;
-            font-size: 14px;
-        }
+        #speedometer { color: #38bdf8; font-family: monospace; }
 
         .controls {
-            position: absolute;
-            bottom: 25px;
-            width: 100%;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 35px;
-            box-sizing: border-box;
-            z-index: 10;
+            position: absolute; bottom: 20px; width: 100%; display: flex; justify-content: space-between;
+            padding: 0 25px; box-sizing: border-box; z-index: 10;
         }
-        .btn-group {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
+        .btn-group { display: flex; gap: 12px; align-items: center; }
         .btn {
-            width: 65px;
-            height: 65px;
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(8px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 24px;
-            font-weight: bold;
-            touch-action: manipulation;
-            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+            width: 60px; height: 60px; background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px); border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%; display: flex; justify-content: center; align-items: center;
+            color: white; font-size: 22px; font-weight: bold; touch-action: manipulation;
         }
-        .btn:active {
-            background: rgba(56, 189, 248, 0.85);
-            border-color: #38bdf8;
-            transform: scale(0.92);
-        }
-        .nitro-btn {
-            background: rgba(220, 38, 38, 0.8);
-            border-color: #f87171;
-            font-size: 14px;
-        }
-        .nitro-btn:active {
-            background: rgba(239, 68, 68, 0.9);
-        }
+        .btn:active { background: rgba(56, 189, 248, 0.85); transform: scale(0.92); }
+        .nitro-btn { background: rgba(220, 38, 38, 0.8); border-color: #f87171; }
+        .camera-btn { background: rgba(16, 185, 129, 0.8); border-color: #34d399; font-size: 18px; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
@@ -203,40 +74,40 @@
 
     <div class="overlay-screen" id="main-menu">
         <div class="menu-card">
-            <div class="menu-title">سيارات العراق 3D v9</div>
-            <div class="menu-subtitle">عالم مفتوح مع نيترو وشرطة ومسافات</div>
+            <div class="menu-title">سيارات العراق 3D v11</div>
+            <div class="menu-subtitle">10 مميزات جديدة: وقود، راديو، مهمات، طقس والكاميرا</div>
             <button class="main-btn" id="btn-start-game">▶ ابدأ اللعب</button>
-            <button class="main-btn secondary" id="btn-open-shop">🏎️ متجر السيارات</button>
+            <button class="main-btn secondary" id="btn-open-shop">🏎️ المتجر وتخصيص الألوان</button>
         </div>
     </div>
 
     <div class="overlay-screen" id="shop-menu" style="display: none;">
         <div class="menu-card">
-            <div class="menu-title">متجر السيارات</div>
+            <div class="menu-title">متجر السيارات وتخصيص الألوان</div>
             <div class="menu-subtitle">رصيدك: 💰 <span id="shop-coins-display">0</span></div>
             
             <div class="shop-items">
                 <div class="shop-item">
-                    <div class="shop-item-info">
-                        <div class="shop-item-name">سيارة المدينة</div>
-                        <div class="shop-item-price">مجاناً</div>
-                    </div>
-                    <button class="main-btn" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="selectCar(0)">مجهزة</button>
+                    <div class="shop-item-info"><div class="shop-item-name">سيارة المدينة الأساسية</div><div class="shop-item-price">مجاناً</div></div>
+                    <button class="main-btn" style="width: auto; padding: 4px 10px; font-size: 11px;" onclick="selectCar(0)">تجهيز</button>
                 </div>
                 <div class="shop-item">
-                    <div class="shop-item-info">
-                        <div class="shop-item-name">تاكسي بغداد 🚕</div>
-                        <div class="shop-item-price">💰 100 عملة</div>
-                    </div>
-                    <button class="main-btn secondary" id="buy-btn-1" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="buyCar(1, 100)">شراء</button>
+                    <div class="shop-item-info"><div class="shop-item-name">تاكسي بغداد 🚕</div><div class="shop-item-price">💰 100 عملة</div></div>
+                    <button class="main-btn secondary" id="buy-btn-1" style="width: auto; padding: 4px 10px; font-size: 11px;" onclick="buyCar(1, 100)">شراء</button>
                 </div>
                 <div class="shop-item">
-                    <div class="shop-item-info">
-                        <div class="shop-item-name">سيارة سبورت 🏎️</div>
-                        <div class="shop-item-price">💰 250 عملة</div>
-                    </div>
-                    <button class="main-btn secondary" id="buy-btn-2" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="buyCar(2, 250)">شراء</button>
+                    <div class="shop-item-info"><div class="shop-item-name">سيارة سبورت 🏎️</div><div class="shop-item-price">💰 250 عملة</div></div>
+                    <button class="main-btn secondary" id="buy-btn-2" style="width: auto; padding: 4px 10px; font-size: 11px;" onclick="buyCar(2, 250)">شراء</button>
                 </div>
+            </div>
+
+            <div style="margin: 10px 0; font-size: 12px; color: #38bdf8;">اختر لون السيارة المخصص:</div>
+            <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 12px;">
+                <button onclick="changeCarColor(0x0284c7)" style="width:30px; height:30px; background:#0284c7; border-radius:50%; border:none; cursor:pointer;"></button>
+                <button onclick="changeCarColor(0xdc2626)" style="width:30px; height:30px; background:#dc2626; border-radius:50%; border:none; cursor:pointer;"></button>
+                <button onclick="changeCarColor(0x10b981)" style="width:30px; height:30px; background:#10b981; border-radius:50%; border:none; cursor:pointer;"></button>
+                <button onclick="changeCarColor(0xf59e0b)" style="width:30px; height:30px; background:#f59e0b; border-radius:50%; border:none; cursor:pointer;"></button>
+                <button onclick="changeCarColor(0x1e293b)" style="width:30px; height:30px; background:#1e293b; border-radius:50%; border:none; cursor:pointer;"></button>
             </div>
 
             <button class="main-btn secondary" id="btn-close-shop">الرجوع للقائمة</button>
@@ -247,7 +118,9 @@
 
     <div id="ui">
         <div class="hud-card">💰 <span id="coins-display">0</span></div>
-        <div class="hud-card" id="odometer">🛣️ 0.00 كم</div>
+        <div class="hud-card" id="fuel-display">⛽ 100%</div>
+        <div class="hud-card" id="mission-display">🚕 ابحث عن زبون</div>
+        <button class="hud-card" id="btn-toggle-radio" style="cursor: pointer;">📻 راديو: طفى</button>
         <button class="hud-card" id="btn-toggle-night" style="cursor: pointer;">☀️ نهار</button>
         <button class="hud-card" id="btn-pause-menu" style="cursor: pointer;">⚙️</button>
         <div class="hud-card" id="speedometer">0 KM/H</div>
@@ -255,6 +128,7 @@
 
     <div class="controls">
         <div class="btn-group">
+            <div class="btn camera-btn" id="btn-camera" title="تغيير الكاميرا">📷</div>
             <div class="btn" id="btn-left">◀</div>
             <div class="btn" id="btn-right">▶</div>
         </div>
@@ -267,24 +141,23 @@
 
     <script>
         const tg = window.Telegram?.WebApp;
-        if (tg) {
-            tg.expand();
-            tg.ready();
-        }
+        if (tg) { tg.expand(); tg.ready(); }
 
-        // تحميل البيانات المحفوظة مسبقاً
         let totalCoins = parseInt(localStorage.getItem('carGame_coins')) || 0;
         let unlockedCars = JSON.parse(localStorage.getItem('carGame_unlocked')) || [true, false, false];
-        let totalDistance = parseFloat(localStorage.getItem('carGame_distance')) || 0;
+        let currentCustomColor = parseInt(localStorage.getItem('carGame_color')) || 0x0284c7;
+        let fuel = 100;
+        let cameraMode = 0; // 0: خلفية واسعة, 1: قريبة, 2: من داخل السيارة
+        let radioOn = false;
+        let missionActive = false;
+        let passengerTarget = null;
 
         document.getElementById('coins-display').innerText = totalCoins;
-        document.getElementById('odometer').innerText = `🛣️ ${totalDistance.toFixed(2)} كم`;
 
-        // --- محاكي الصوت (Audio Synthesizer) ---
+        // --- أصوات الراديو والمحرك والمهمات ---
         let audioCtx = null;
-        let engineOsc1 = null;
-        let engineOsc2 = null;
-        let engineFilter = null;
+        let engineOsc1 = null, engineOsc2 = null, engineFilter = null;
+        let radioOsc = null, radioGain = null;
 
         function initAudio() {
             if (audioCtx) return;
@@ -297,10 +170,9 @@
 
             engineOsc1.type = 'triangle';
             engineOsc2.type = 'sine';
-
             engineFilter.type = 'lowpass';
             engineFilter.frequency.setValueAtTime(140, audioCtx.currentTime);
-            engineGain.gain.setValueAtTime(0.07, audioCtx.currentTime);
+            engineGain.gain.setValueAtTime(0.06, audioCtx.currentTime);
 
             engineOsc1.connect(engineFilter);
             engineOsc2.connect(engineFilter);
@@ -311,46 +183,67 @@
             engineOsc2.start();
         }
 
-        function playCoinSound() {
-            if (!audioCtx) return;
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sine';
-            osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(1300, audioCtx.currentTime + 0.12);
-            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.12);
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
-            osc.start();
-            osc.stop(audioCtx.currentTime + 0.12);
+        function toggleRadio() {
+            if (!audioCtx) initAudio();
+            radioOn = !radioOn;
+            const rBtn = document.getElementById('btn-toggle-radio');
+            if (radioOn) {
+                rBtn.innerText = "📻 راديو: شغال";
+                playRadioNotes();
+            } else {
+                rBtn.innerText = "📻 راديو: طفى";
+                if (radioGain) radioGain.gain.setValueAtTime(0, audioCtx.currentTime);
+            }
         }
 
-        function playCrashSound() {
+        function playRadioNotes() {
+            if (!radioOn || !audioCtx) return;
+            const notes = [261.63, 293.66, 329.63, 392.00, 440.00];
+            const osc = audioCtx.createOscillator();
+            radioGain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(notes[Math.floor(Math.random() * notes.length)], audioCtx.currentTime);
+            radioGain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+            radioGain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
+            osc.connect(radioGain);
+            radioGain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 1.2);
+            setTimeout(playRadioNotes, 1500);
+        }
+
+        function playSoundEffect(type) {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(120, audioCtx.currentTime);
-            osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.25);
-            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.25);
+            if (type === 'coin') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(1300, audioCtx.currentTime + 0.12);
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+            } else if (type === 'crash') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(120, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.25);
+                gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+            } else if (type === 'mission') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            }
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
             osc.connect(gain);
             gain.connect(audioCtx.destination);
             osc.start();
-            osc.stop(audioCtx.currentTime + 0.25);
+            osc.stop(audioCtx.currentTime + 0.3);
         }
 
         function updateEngineSound(currentSpeed) {
             if (!engineOsc1 || !audioCtx) return;
             const normSpeed = Math.abs(currentSpeed);
-            const freq1 = 25 + normSpeed * 70;
-            const freq2 = 50 + normSpeed * 140;
-            const cutoff = 120 + normSpeed * 400;
-
-            engineOsc1.frequency.setTargetAtTime(freq1, audioCtx.currentTime, 0.05);
-            engineOsc2.frequency.setTargetAtTime(freq2, audioCtx.currentTime, 0.05);
-            engineFilter.frequency.setTargetAtTime(cutoff, audioCtx.currentTime, 0.05);
+            engineOsc1.frequency.setTargetAtTime(25 + normSpeed * 70, audioCtx.currentTime, 0.05);
+            engineOsc2.frequency.setTargetAtTime(50 + normSpeed * 140, audioCtx.currentTime, 0.05);
         }
 
         // --- Three.js Setup ---
@@ -364,35 +257,40 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
         renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
-        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
         container.appendChild(renderer.domElement);
 
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
-
         const sunLight = new THREE.DirectionalLight(0xfffbeb, 1.2);
         sunLight.position.set(100, 150, 50);
         sunLight.castShadow = true;
         scene.add(sunLight);
 
+        // طقس الأمطار (Rain Effect)
+        const rainGeo = new THREE.BufferGeometry();
+        const rainCount = 400;
+        const rainPositions = new Float32Array(rainCount * 3);
+        for(let i=0; i<rainCount*3; i+=3) {
+            rainPositions[i] = (Math.random() - 0.5) * 300;
+            rainPositions[i+1] = Math.random() * 50;
+            rainPositions[i+2] = (Math.random() - 0.5) * 300;
+        }
+        rainGeo.setAttribute('position', new THREE.BufferAttribute(rainPositions, 3));
+        const rainMat = new THREE.PointsMaterial({ color: 0xa5f3fc, size: 0.6, transparent: true, opacity: 0.6 });
+        const rainSystem = new THREE.Points(rainGeo, rainMat);
+        scene.add(rainSystem);
+
         const textureLoader = new THREE.TextureLoader();
         const grassTex = textureLoader.load('https://threejs.org/examples/textures/terrain/grasslight-big.jpg');
-        grassTex.wrapS = THREE.RepeatWrapping;
-        grassTex.wrapT = THREE.RepeatWrapping;
-        grassTex.repeat.set(40, 40);
+        grassTex.wrapS = THREE.RepeatWrapping; grassTex.wrapT = THREE.RepeatWrapping; grassTex.repeat.set(40, 40);
+        const grass = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.8 }));
+        grass.rotation.x = -Math.PI / 2; grass.receiveShadow = true; scene.add(grass);
 
-        const grass = new THREE.Mesh(
-            new THREE.PlaneGeometry(600, 600),
-            new THREE.MeshStandardMaterial({ map: grassTex, roughness: 0.8 })
-        );
-        grass.rotation.x = -Math.PI / 2;
-        grass.receiveShadow = true;
-        scene.add(grass);
-
+        // الطرق، المطبات، ومنحدرات القفز (Stunt Ramps)
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x222222, roughness: 0.9 });
         const lineMat = new THREE.MeshBasicMaterial({ color: 0xfacc15 });
-        const curbMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.5 });
         const bumpMat = new THREE.MeshStandardMaterial({ color: 0xd97706, roughness: 0.4 });
+        const rampMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3 });
 
         const worldSize = 600;
         const roadSpacing = 120;
@@ -400,122 +298,106 @@
 
         for (let pos = -worldSize / 2 + 60; pos <= worldSize / 2 - 60; pos += roadSpacing) {
             const roadV = new THREE.Mesh(new THREE.PlaneGeometry(roadWidth, worldSize), roadMat);
-            roadV.rotation.x = -Math.PI / 2;
-            roadV.position.set(pos, 0.02, 0);
-            scene.add(roadV);
-
-            const lineV = new THREE.Mesh(new THREE.PlaneGeometry(0.5, worldSize), lineMat);
-            lineV.rotation.x = -Math.PI / 2;
-            lineV.position.set(pos, 0.03, 0);
-            scene.add(lineV);
+            roadV.rotation.x = -Math.PI / 2; roadV.position.set(pos, 0.02, 0); scene.add(roadV);
 
             const roadH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, roadWidth), roadMat);
-            roadH.rotation.x = -Math.PI / 2;
-            roadH.position.set(0, 0.02, pos);
-            scene.add(roadH);
-
-            const lineH = new THREE.Mesh(new THREE.PlaneGeometry(worldSize, 0.5), lineMat);
-            lineH.rotation.x = -Math.PI / 2;
-            lineH.position.set(0, 0.03, pos);
-            scene.add(lineH);
+            roadH.rotation.x = -Math.PI / 2; roadH.position.set(0, 0.02, pos); scene.add(roadH);
 
             const bump = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, roadWidth, 12), bumpMat);
-            bump.rotation.z = Math.PI / 2;
-            bump.position.set(pos, 0.1, pos + 35);
-            scene.add(bump);
+            bump.rotation.z = Math.PI / 2; bump.position.set(pos, 0.1, pos + 35); scene.add(bump);
+
+            // منحدر قفز استعراضي
+            const ramp = new THREE.Mesh(new THREE.BoxGeometry(4, 0.8, 6), rampMat);
+            ramp.position.set(pos + 6, 0.3, pos - 25);
+            scene.add(ramp);
         }
 
         const colliders = [];
         for (let bx = -worldSize / 2 + 60; bx < worldSize / 2 - 60; bx += roadSpacing) {
             for (let bz = -worldSize / 2 + 60; bz < worldSize / 2 - 60; bz += roadSpacing) {
-                const bWidth = 36;
-                const bDepth = 36;
-                const bHeight = 35 + Math.random() * 30;
-                const cx = bx + roadSpacing / 2;
-                const cz = bz + roadSpacing / 2;
-
-                const building = new THREE.Mesh(
-                    new THREE.BoxGeometry(bWidth, bHeight, bDepth),
-                    new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 })
-                );
+                const bWidth = 36, bDepth = 36, bHeight = 35 + Math.random() * 30;
+                const cx = bx + roadSpacing / 2, cz = bz + roadSpacing / 2;
+                const building = new THREE.Mesh(new THREE.BoxGeometry(bWidth, bHeight, bDepth), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.4 }));
                 building.position.set(cx, bHeight / 2, cz);
-                building.castShadow = true;
-                scene.add(building);
+                building.castShadow = true; scene.add(building);
                 colliders.push({ x: cx, z: cz, radius: 20 });
             }
         }
 
+        // محطات الوقود (Gas Stations)
+        const gasStations = [];
+        const stationGeo = new THREE.BoxGeometry(6, 4, 6);
+        const stationMat = new THREE.MeshStandardMaterial({ color: 0xef4444 });
+        for(let i=0; i<3; i++) {
+            const st = new THREE.Mesh(stationGeo, stationMat);
+            st.position.set((i - 1) * 180, 2, -150);
+            scene.add(st);
+            gasStations.push({ x: st.position.x, z: st.position.z });
+        }
+
+        // العملات ومحطات الركاب للتاكسي
         const coins = [];
         const coinGeo = new THREE.CylinderGeometry(1.2, 1.2, 0.2, 16);
         const coinMat = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1 });
-
         for (let i = 0; i < 40; i++) {
             const coin = new THREE.Mesh(coinGeo, coinMat);
             coin.rotation.x = Math.PI / 2;
-            const rx = (Math.floor(Math.random() * 4) - 1.5) * roadSpacing;
-            const rz = (Math.random() - 0.5) * (worldSize - 100);
-            coin.position.set(rx, 1.2, rz);
-            scene.add(coin);
-            coins.push(coin);
+            coin.position.set((Math.floor(Math.random() * 4) - 1.5) * roadSpacing, 1.2, (Math.random() - 0.5) * (worldSize - 100));
+            scene.add(coin); coins.push(coin);
         }
 
-        // بناء السيارات مع إضافة سيارات الشرطة
-        function createCarMesh(colorHex, isTaxi = false, isPolice = false) {
+        // بناء السيارات مع الشرطة والدراجات النارية
+        function createCarMesh(colorHex, isTaxi = false, isPolice = false, isMoto = false) {
             const cGroup = new THREE.Group();
             const paintMat = new THREE.MeshStandardMaterial({ color: colorHex, metalness: 0.7, roughness: 0.2 });
             const blackMat = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.8 });
-            const glassMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.8 });
+            
+            if (isMoto) {
+                const body = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.8, 2.2), paintMat);
+                body.position.y = 0.5; cGroup.add(body);
+                return cGroup;
+            }
 
             const body = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.5, 4.2), paintMat);
-            body.position.y = 0.5;
-            cGroup.add(body);
-
-            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2.1), glassMat);
-            cabin.position.set(0, 1.1, -0.3);
-            cGroup.add(cabin);
+            body.position.y = 0.5; cGroup.add(body);
+            const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.7, 2.1), new THREE.MeshStandardMaterial({ color: 0x0f172a, transparent: true, opacity: 0.8 }));
+            cabin.position.set(0, 1.1, -0.3); cGroup.add(cabin);
 
             if (isTaxi) {
                 const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.3, 0.4), new THREE.MeshBasicMaterial({ color: 0xfacc15 }));
-                taxiSign.position.set(0, 1.6, -0.3);
-                cGroup.add(taxiSign);
+                taxiSign.position.set(0, 1.6, -0.3); cGroup.add(taxiSign);
             }
-
             if (isPolice) {
                 const pLightRed = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.3), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
-                pLightRed.position.set(-0.3, 1.6, -0.3);
-                cGroup.add(pLightRed);
+                pLightRed.position.set(-0.3, 1.6, -0.3); cGroup.add(pLightRed);
                 const pLightBlue = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.2, 0.3), new THREE.MeshBasicMaterial({ color: 0x0000ff }));
-                pLightBlue.position.set(0.3, 1.6, -0.3);
-                cGroup.add(pLightBlue);
+                pLightBlue.position.set(0.3, 1.6, -0.3); cGroup.add(pLightBlue);
             }
-
-            const wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 24);
-            const wPos = [[-1.1, 0.4, 1.2], [1.1, 0.4, 1.2], [-1.1, 0.4, -1.2], [1.1, 0.4, -1.2]];
-            wPos.forEach(pos => {
-                const w = new THREE.Mesh(wheelGeo, blackMat);
-                w.rotation.z = Math.PI / 2;
-                w.position.set(...pos);
-                cGroup.add(w);
-            });
-
             return cGroup;
         }
 
         const carsData = [
-            { id: 0, color: 0x0284c7, maxSpeed: 1.1, isTaxi: false, name: "عادية" },
-            { id: 1, color: 0xeab308, maxSpeed: 1.3, isTaxi: true, name: "تاكسي" },
-            { id: 2, color: 0xdc2626, maxSpeed: 1.6, isTaxi: false, name: "سبورت" }
+            { id: 0, maxSpeed: 1.1, isTaxi: false },
+            { id: 1, maxSpeed: 1.3, isTaxi: true },
+            { id: 2, maxSpeed: 1.6, isTaxi: false }
         ];
 
         let selectedCarIndex = 0;
-        let car = createCarMesh(carsData[0].color, false);
+        let car = createCarMesh(currentCustomColor, false);
         scene.add(car);
 
         function updateCarModel(index) {
             scene.remove(car);
             selectedCarIndex = index;
-            car = createCarMesh(carsData[index].color, carsData[index].isTaxi);
+            car = createCarMesh(currentCustomColor, carsData[index].isTaxi);
             scene.add(car);
+        }
+
+        function changeCarColor(hexColor) {
+            currentCustomColor = hexColor;
+            localStorage.setItem('carGame_color', hexColor);
+            updateCarModel(selectedCarIndex);
+            alert("تم تغيير لون السيارة بنجاح!");
         }
 
         function selectCar(index) {
@@ -533,94 +415,78 @@
                 localStorage.setItem('carGame_unlocked', JSON.stringify(unlockedCars));
                 document.getElementById('coins-display').innerText = totalCoins;
                 document.getElementById('shop-coins-display').innerText = totalCoins;
-                document.getElementById(`buy-btn-${index}`).innerText = "مجهزة";
-                document.getElementById(`buy-btn-${index}`).className = "main-btn";
                 updateCarModel(index);
             } else {
-                alert("عذراً، لا تمتلك عملات كافية للشراء!");
+                alert("رصيدك غير كافٍ للشراء!");
             }
         }
 
-        // سيارات الشرطة والمرور المتجولة
+        // حركة المرور والدراجات النارية والشرطة
         const trafficCars = [];
-        for (let i = 0; i < 6; i++) {
+        for (let i = 0; i < 7; i++) {
             const isPol = i === 0;
-            const aiCar = createCarMesh(isPol ? 0x1e293b : 0x64748b, false, isPol);
+            const isMot = i > 4;
+            const aiCar = createCarMesh(isPol ? 0x1e293b : (isMot ? 0xf97316 : 0x64748b), false, isPol, isMot);
             aiCar.position.set((i - 3) * roadSpacing + 4, 0, (Math.random() - 0.5) * 300);
             scene.add(aiCar);
-            trafficCars.push({ mesh: aiCar, speed: isPol ? 0.45 : 0.3 });
+            trafficCars.push({ mesh: aiCar, speed: isMot ? 0.5 : 0.3 });
         }
 
-        let isNight = false;
-        document.getElementById('btn-toggle-night').addEventListener('click', () => {
-            isNight = !isNight;
-            if (isNight) {
-                scene.background.setHex(0x020617);
-                scene.fog.color.setHex(0x020617);
-                ambientLight.intensity = 0.15;
-                sunLight.intensity = 0.1;
-                document.getElementById('btn-toggle-night').innerText = "🌙 ليل";
-            } else {
-                scene.background.setHex(0x38bdf8);
-                scene.fog.color.setHex(0x38bdf8);
-                ambientLight.intensity = 0.8;
-                sunLight.intensity = 1.2;
-                document.getElementById('btn-toggle-night').innerText = "☀️ نهار";
-            }
-        });
-
+        // أزرار التحكم والتشغيل
         document.getElementById('btn-start-game').addEventListener('click', () => {
             initAudio();
             document.getElementById('main-menu').style.display = 'none';
         });
-
         document.getElementById('btn-open-shop').addEventListener('click', () => {
             document.getElementById('shop-coins-display').innerText = totalCoins;
             document.getElementById('shop-menu').style.display = 'flex';
         });
+        document.getElementById('btn-close-shop').addEventListener('click', () => { document.getElementById('shop-menu').style.display = 'none'; });
+        document.getElementById('btn-pause-menu').addEventListener('click', () => { document.getElementById('main-menu').style.display = 'flex'; });
+        document.getElementById('btn-toggle-radio').addEventListener('click', toggleRadio);
+        document.getElementById('btn-camera').addEventListener('click', () => { cameraMode = (cameraMode + 1) % 3; });
 
-        document.getElementById('btn-close-shop').addEventListener('click', () => {
-            document.getElementById('shop-menu').style.display = 'none';
+        let isNight = false;
+        document.getElementById('btn-toggle-night').addEventListener('click', () => {
+            isNight = !isNight;
+            scene.background.setHex(isNight ? 0x020617 : 0x38bdf8);
+            scene.fog.color.setHex(isNight ? 0x020617 : 0x38bdf8);
+            ambientLight.intensity = isNight ? 0.15 : 0.8;
+            sunLight.intensity = isNight ? 0.1 : 1.2;
+            document.getElementById('btn-toggle-night').innerText = isNight ? "🌙 ليل" : "☀️ نهار";
         });
 
-        document.getElementById('btn-pause-menu').addEventListener('click', () => {
-            document.getElementById('main-menu').style.display = 'flex';
-        });
-
-        // الفيزياء والتحكم مع نظام النيترو
-        let speed = 0;
-        let accel = 0.018;
-        let friction = 0.009;
-        let angle = 0;
-
+        let speed = 0, accel = 0.018, friction = 0.009, angle = 0;
         const keys = { gas: false, brake: false, left: false, right: false, nitro: false };
 
         function bindControl(id, key) {
             const btn = document.getElementById(id);
             const start = (e) => { e.preventDefault(); initAudio(); keys[key] = true; };
             const end = (e) => { e.preventDefault(); keys[key] = false; };
-            btn.addEventListener('touchstart', start);
-            btn.addEventListener('touchend', end);
-            btn.addEventListener('mousedown', start);
-            btn.addEventListener('mouseup', end);
+            btn.addEventListener('touchstart', start); btn.addEventListener('touchend', end);
+            btn.addEventListener('mousedown', start); btn.addEventListener('mouseup', end);
         }
-
-        bindControl('btn-gas', 'gas');
-        bindControl('btn-brake', 'brake');
-        bindControl('btn-left', 'left');
-        bindControl('btn-right', 'right');
-        bindControl('btn-nitro', 'nitro');
+        bindControl('btn-gas', 'gas'); bindControl('btn-brake', 'brake');
+        bindControl('btn-left', 'left'); bindControl('btn-right', 'right'); bindControl('btn-nitro', 'nitro');
 
         function animate() {
             requestAnimationFrame(animate);
 
-            let currentMaxSpeed = carsData[selectedCarIndex].maxSpeed;
-            if (keys.nitro) {
-                currentMaxSpeed *= 1.7; // مضاعفة السرعة بالنيترو
+            // حركة الأمطار
+            const positions = rainSystem.geometry.attributes.position.array;
+            for(let i=1; i<positions.length; i+=3) {
+                positions[i] -= 1.2;
+                if(positions[i] < 0) positions[i] = 50;
             }
+            rainSystem.geometry.attributes.position.needsUpdate = true;
 
-            if (keys.gas) {
+            let currentMaxSpeed = carsData[selectedCarIndex].maxSpeed;
+            if (keys.nitro) currentMaxSpeed *= 1.7;
+
+            if (keys.gas && fuel > 0) {
                 speed = Math.min(speed + accel, currentMaxSpeed);
+                fuel = Math.max(0, fuel - 0.003);
+                document.getElementById('fuel-display').innerText = `⛽ ${Math.round(fuel)}%`;
             } else if (keys.brake) {
                 speed = Math.max(speed - accel, -currentMaxSpeed / 2);
             } else {
@@ -630,44 +496,59 @@
 
             updateEngineSound(speed);
 
-            if (Math.abs(speed) > 0.01) {
-                totalDistance += Math.abs(speed) * 0.0008;
-                document.getElementById('odometer').innerText = `🛣️ ${totalDistance.toFixed(2)} كم`;
-                // حفظ المسافة دورياً
-                if (Math.random() < 0.05) {
-                    localStorage.setItem('carGame_distance', totalDistance);
-                }
-            }
-
             let turnAngle = 0;
             if (keys.left) turnAngle = 0.35;
             if (keys.right) turnAngle = -0.35;
-
-            if (Math.abs(speed) > 0.01) {
-                const dir = speed > 0 ? 1 : -1;
-                angle += turnAngle * 0.065 * dir;
-            }
+            if (Math.abs(speed) > 0.01) angle += turnAngle * 0.065 * (speed > 0 ? 1 : -1);
 
             const nextX = car.position.x + Math.sin(angle) * speed;
             const nextZ = car.position.z + Math.cos(angle) * speed;
 
             let collide = false;
             for (let c of colliders) {
-                if (Math.hypot(nextX - c.x, nextZ - c.z) < c.radius) {
-                    collide = true;
-                    break;
-                }
+                if (Math.hypot(nextX - c.x, nextZ - c.z) < c.radius) { collide = true; break; }
             }
 
             if (!collide) {
-                car.position.x = nextX;
-                car.position.z = nextZ;
+                car.position.x = nextX; car.position.z = nextZ;
             } else {
-                playCrashSound();
+                playSoundEffect('crash');
                 speed = -speed * 0.3;
+                totalCoins = Math.max(0, totalCoins - 1); // خصم نقاط عند التحطيم
+                document.getElementById('coins-display').innerText = totalCoins;
             }
 
             car.rotation.y = angle;
+
+            // تفقد الوقود في المحطات
+            gasStations.forEach(st => {
+                if (Math.hypot(car.position.x - st.x, car.position.z - st.z) < 5) {
+                    fuel = 100;
+                    document.getElementById('fuel-display').innerText = `⛽ 100% (ممتلئ)`;
+                }
+            });
+
+            // مهمات التاكسي
+            if (carsData[selectedCarIndex].isTaxi) {
+                if (!missionActive && Math.random() < 0.002) {
+                    missionActive = true;
+                    passengerTarget = { x: (Math.random() - 0.5) * 400, z: (Math.random() - 0.5) * 400 };
+                    document.getElementById('mission-display').innerText = "🚕 توجه لنقل الزبون!";
+                    playSoundEffect('mission');
+                }
+                if (missionActive && passengerTarget) {
+                    if (Math.hypot(car.position.x - passengerTarget.x, car.position.z - passengerTarget.z) < 6) {
+                        missionActive = false;
+                        totalCoins += 50;
+                        localStorage.setItem('carGame_coins', totalCoins);
+                        document.getElementById('coins-display').innerText = totalCoins;
+                        document.getElementById('mission-display').innerText = "✅ تمت الإنجاز +50 💰";
+                        playSoundEffect('coin');
+                    }
+                }
+            } else {
+                document.getElementById('mission-display').innerText = "🚕 ابحث عن تاكسي";
+            }
 
             trafficCars.forEach(tc => {
                 tc.mesh.position.z += tc.speed;
@@ -682,24 +563,24 @@
                         totalCoins += 10;
                         localStorage.setItem('carGame_coins', totalCoins);
                         document.getElementById('coins-display').innerText = totalCoins;
-                        playCoinSound();
+                        playSoundEffect('coin');
                     }
                 }
             });
 
-            // اهتزاز الكاميرا عند تفعيل النيترو
-            let shakeX = 0, shakeY = 0;
-            if (keys.nitro && Math.abs(speed) > 0.5) {
-                shakeX = (Math.random() - 0.5) * 0.15;
-                shakeY = (Math.random() - 0.5) * 0.15;
+            // تبديل زوايا الكاميرا الـ 3
+            let camOffset;
+            if (cameraMode === 0) {
+                camOffset = new THREE.Vector3(0, 3.2, -8).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            } else if (cameraMode === 1) {
+                camOffset = new THREE.Vector3(0, 1.8, -4).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
+            } else {
+                camOffset = new THREE.Vector3(0, 1.3, 0.4).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle); // منظور السائق الداخلي
             }
-
-            const camOffset = new THREE.Vector3(shakeX, 2.8 + shakeY, -7).applyAxisAngle(new THREE.Vector3(0, 1, 0), angle);
             camera.position.copy(car.position).add(camOffset);
             camera.lookAt(car.position.x, car.position.y + 1, car.position.z);
 
             document.getElementById('speedometer').innerText = Math.round(Math.abs(speed) * 150) + " KM/H";
-
             renderer.render(scene, camera);
         }
 
